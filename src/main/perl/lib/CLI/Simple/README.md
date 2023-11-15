@@ -28,7 +28,7 @@ commands and arguments.
 
 Command line scripts often take options, sometimes a command and
 perhaps arguments to those commands.  For example, consider the script
-`myscript` that takes options and implements a few commands (biz, buz) with
+`myscript` that takes options and implements a few commands (_biz_, _buz_) with
 arguments.
 
     myscript [options] command args
@@ -39,7 +39,7 @@ Examples:
 
     myscript --bar --log-level info buz message "Hello World"
 
-Using <CLI::Simple> to implement this script looks like this...
+Using `CLI::Simple` to implement this script looks like this...
 
     package MyScript;
 
@@ -73,12 +73,12 @@ Using <CLI::Simple> to implement this script looks like this...
 
 ## new
 
-Instantiates a new CLI::Simple object.
+Instantiates a new `CLI::Simple` object.
 
 ## run
 
 Execute the script with the given options, commands and arguments. The
-`run` method interprets the command pass execution to your command
+`run` method interprets the command line and passe control to your command
 subroutines. Your subroutines should return a 0 for success and a
 non-zero value for failure.  This error code is passed to the shell as
 the script return code.
@@ -123,7 +123,7 @@ options into the constructor like this:
 
     my $cli = CLI::Simple->new(option_specs => [ qw( help|h foo bar=s log-level=s ]);
 
-In your command subroutines you can access these options using gettters.
+In your command subroutines you can then access these options using gettters.
 
     $cli->get_foo;
     $cli->get_bar;
@@ -131,20 +131,48 @@ In your command subroutines you can access these options using gettters.
 
 Note that options that use dashes in the name will be automatically
 converted to snake case names. Some folks find it easier to use '-'
-then '\_' for option names.
+rather than '\_' for option names.
 
 # COMMAND ARGUMENTS
 
 If you want to allow your commands to accept positional arguments you
-can retrieve them as named hash elements.
+can retrieve them as named hash elements.  This makes your code much
+easier to read and understand.
 
-    my %args = $self->get_args(qw(arg1 arg2));
+    sub send_mesage {
+      my ($self) = @_;
 
-    my $args = $self->get_args(qw(arg1 arg2));
+      my %args = $self->get_args(qw(phone_number message));
+
+      send_sms_mesage($args{phone_number}, $args{message});
+      ...
+    }
 
 # SETTING DEFAULT VALUES FOR OPTIONS
 
+To set default values for your option, pass a hash reference as the
+`default_options` argument to the constructur.
+
+    my $cli = CLI::Simple->new(
+      default_option => { foo => 'bar' },
+      option_specs   => [ qw(foo=s bar=s) ],
+      commands       => { foo => \&foo, bar => \&bar },
+    );
+
 # ADDING ADDITIONAL SETTERS & GETTERS
+
+As note all command line options are available using getters of the
+same name preceded by `get_`.
+
+If you want to create additional setter and getters, pass an array of
+variable names as the `extra_options` argument to the constructor.
+
+    my $cli = CLI::Simple->new(
+      default_option => { foo => 'bar' },
+      option_specs   => [ qw(foo=s bar=s) ],
+      extra_options  => [ qw(biz buz baz) ],
+      commands       => { foo => \&foo, bar => \&bar },
+    );
 
 # ADDING USAGE TO YOUR SCRIPTS
 
@@ -153,30 +181,60 @@ at the bottom of your script with a USAGE section (head1).
 
     =head1 USAGE
 
-    usage: myscript [options] command args
+     usage: myscript [options] command args
+     
+     Options
+     -------
+     --help, -h      help
+     ....
 
-    Options
-    -------
-    --help, -h      help
-    ....
+If the command specified is 'help' or if you have added an optional
+`--help` option, users can access the usage section from the command line.
 
-If the commad used is 'help' or if you have added an optional
-`--help` option, users can display the usage section.
-
-    myscript.pm -h
-    myscript help
+    perl myscript.pm -h
+    perl myscript.pm help
 
 # LOGGING
 
-`CLI::Simple` will enable you to create a Log::Log4perl logger. You can
-pass in a configuration or let the classs use Log::Log4perl's easy
-mode.
+`CLI::Simple` will enable you to automatically add logging to your
+scrip using a [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) logger. You can pass in a `Log4perl` configuration
+string or let the class instantiat `Log::Log4perl` in easy mode.
+
+Do this at the top of your class:
 
     __PACKAGE__->use_log4perl(level => 'info', config => $config);
 
-The class will add a `--log-level` option for you if you have not added one yourself.
+The class will add a `--log-level` option for you if you have not
+added one yourself. Additionally, you can use the `get_logger` method
+to retrieve the logger.
 
 # FAQ
+
+- Do I need to implement commands?
+
+    No, but if you don't you must provide the name of the subroutine that
+    will implement your script as the `default` command.
+
+        use CLI::Simple;
+
+        sub main {
+          my ($cli) = @_;
+
+          # do something useful...
+        }
+
+        my $cli = CLI::Simple->new(
+          default_option => { foo => 'bar' },
+          option_specs   => [ qw(foo=s bar=s) ],
+          extra_options  => [ qw(biz buz baz) ],
+          commands       => { default => \&main },
+        );
+
+        $cli->run;
+
+- Do I have to subclass `CLI::Simple`?
+
+    No, see above example,
 
 # LICENSE AND COPYRIGHT
 

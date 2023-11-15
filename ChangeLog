@@ -1,3 +1,11 @@
+Wed Nov 15 16:25:19 2023  Rob Lauer  <rlauer6@comcast.net>
+
+	[docs]:
+	* Makefile.am: make docs
+	* README.md: generated
+	* src/main/perl/lib/CLI/Simple/README.md: likewise
+	* src/main/perl/lib/CLI/Simple.pm.in: pod tweaks
+
 Wed Nov 15 15:51:35 2023  Rob Lauer  <rlauer6@comcast.net>
 
 	[BigBang]:

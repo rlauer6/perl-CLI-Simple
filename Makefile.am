@@ -25,6 +25,18 @@ bin_SCRIPTS = install-from-cpan
 $(PACKAGE_NAME).spec: % : %.in
 	$(do_subst) $< > $@
 
+src/main/perl/lib/CLI/Simple.pm: src/main/perl/lib/CLI/Simple.pm.in
+	cd src/main/perl/lib; \
+	$(MAKE)
+
+docs: README.md
+
+README.md: src/main/perl/lib/CLI/Simple/README.md src/main/perl/lib/CLI/Simple.pm
+	cd src/main/perl/lib; \
+	$(MAKE) docs; \
+	cd -
+	cp $< $@
+
 .PHONY: cpan
 
 cpan:
