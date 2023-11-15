@@ -1,0 +1,69 @@
+# -*- mode: conf; -*-
+# This is the configuration file for `autoconf-template-perl`
+# you can place this file your $HOME directory or the directory from which you 
+# will create your project
+#
+# Rules of the Road
+# -----------------
+# * boolean true values can be represented as: true, yes, 1, on
+#
+# * boolean false values can be representeda as: false, no, 0, off
+#
+# * use \ to continue lines
+#
+# * use qr// for regular expressions for exclude_files, exclude_dirs
+#
+# * directories listed without leading '/' are relative to the directory in which
+#   you are in when running `autoconf-tempate-perl` or the value of --source-dir
+#
+# * command line arguments override values in your .autoconf-template-perlrc file
+# 
+[global]
+
+author = Anonymouse
+email  = anonymouse@example.org
+
+# create files from stubs if they are listed in the manifest
+# but do not exist
+create_missing = true
+
+# maximum severity level allowable
+perlcritic_severity = 3
+
+# create unit test stubs for .pl, .cgi and .pm files
+unit_tests = true
+
+# whether to create man pages from pod
+man_pages = true
+
+# wheter to create README.md files from pod in .pm files
+pod_to_readme = true
+
+# whether to add version numbers in the requirements files
+version_numbers = true
+
+# create HTML directories regardless of manifest contents
+html           = false
+
+# likewise
+bash           = true
+
+
+# exclude these files when creating manifest (--create-manifest)
+exclude_files  = Makefile Makefile.am Makefile.in \
+                 qr/manifest[.]yaml/ \
+                 qr/autoconf-template-perl[.]log/ \
+                 qr/[.]in$/
+
+# exclude traversing these directories when creating manifest
+exclude_dirs = .git
+
+[stubs]
+
+pm   = /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.pm.tt
+pl   = /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.pl.tt
+cgi  = /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.cgi.tt
+cfg  = /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.cfg.tt
+js   = /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.js.tt
+html = /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.html.tt
+

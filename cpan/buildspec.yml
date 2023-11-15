@@ -1,0 +1,27 @@
+project:
+  description: Simple command line script accelerator
+  author:
+    name: Rob Lauer
+    mailto: rlauer6@comcast.net
+pm_module: CLI::Simple
+min-perl-version: 5.010
+dependencies:
+  test_requires: test-requires
+  requires: requires
+path:
+  pm_module: src/main/perl/lib
+  tests: src/main/perl/lib/t
+extra-files:
+  - ChangeLog
+provides:
+  - CLI::Simple::Constants
+  - CLI::Simple::Utils
+resources:
+  homepage: http://github.com/rlauer6/perl-CLI-Simple
+  bugtracker:
+    web: http://github.com/rlauer6/perl-CLI-Simple-API/issues
+    mailto: rlauer6@comcast.net
+  repository:
+    url: git://github.com/rlauer6/perl-CLI-Simple.git
+    web: http://github.com/rlauer6/perl-CLI-Simple
+    type: 'git'

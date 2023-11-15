@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#-*- mode: sh; -*-
+# 
+# version: @PACKAGE_VERSION@
+# project: @PACKAGE_NAME@
+
+requires="$1"
+
+if test -z "$requires"; then
+   >&2 echo "usage: install-from-cpan requires.txt"
+   exit 1;
+fi
+
+if ! test -e "$requires"; then
+   >&2 echo "$requires not found"
+   exit 1;
+fi
+
+set -ex
+
+destdir=@bindir@
+logdir=@localstatedir@/log
+
+CPANM=$(command -v cpanm)
+
+if test -z "$CPANM"; then
+    curl -L https://cpanmin.us -o ${destdir}/cpanm
+    chmod +x ${destdir}/cpanm
+    CPANM=${destdir}/cpanm
+fi
+
+set -o pipefail
+
+for a in $(cat $requires | awk '{print $1}'); do
+  $CPANM -n -v $a | tee -a ${logdir}/cpanm-install.log;
+done
+
+exit 0
+

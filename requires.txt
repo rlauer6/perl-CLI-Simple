@@ -1,0 +1,2 @@
+Class::Accessor::Fast 0.51
+Log::Log4perl 1.55

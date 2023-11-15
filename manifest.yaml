@@ -1,0 +1,9 @@
+project: perl-CLI-Simple
+description: Accelerator for creating command line scripts
+author: Rob Lauer
+email: rlauer6@comcast.net
+perl:
+  lib:
+    - perl-Amazon-API/src/examples/CLI/Simple.pm
+    - perl-Amazon-API/src/examples/CLI/Simple/Constants.pm
+    - perl-Amazon-API/src/examples/CLI/Simple/Utils.pm

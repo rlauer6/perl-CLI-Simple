@@ -1,0 +1,4 @@
+#!@BASHRUN@
+
+testname="$(basename $0 .test).t"
+@PROVE@ -v  -I lib -I ../lib -I @perl5libdir@ t/$testname

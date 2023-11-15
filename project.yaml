@@ -1,0 +1,320 @@
+---
+add-version-numbers: 1
+author: Rob Lauer
+autoconf_templaterc: !!perl/hash:Config::IniFiles
+  EOT: {}
+  _comments_at_end_of_file: []
+  _curr_cmts: []
+  _curr_end_comment: ''
+  _curr_parm: html
+  _curr_sect: stubs
+  _curr_val: /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.html.tt
+  _read_line_num: 68
+  allowcontinue: 1
+  allowed_comment_char: ;#
+  cf: /home/rclauer/.autoconf-template-perlrc
+  comment_char: '#'
+  default: ''
+  e:
+    global: 1
+    stubs: 1
+  fallback: ~
+  fallback_used: 0
+  file_mode: 100644
+  group: {}
+  handle_trailing_comment: 0
+  imported: ~
+  line_ends: "\n"
+  mye:
+    global: 1
+    stubs: 1
+  myparms:
+    global:
+      - author
+      - email
+      - create_missing
+      - perlcritic_severity
+      - unit_tests
+      - html
+      - bash
+      - version_numbers
+      - pod_to_readme
+      - man_pages
+      - exclude_files
+      - exclude_dirs
+    stubs:
+      - pm
+      - pl
+      - cgi
+      - cfg
+      - js
+      - html
+  mysects:
+    - global
+    - stubs
+  nocase: 0
+  nomultiline: 0
+  pCMT:
+    global:
+      bash:
+        - '# likewise'
+      create_missing:
+        - '# create files from stubs if they are listed in the manifest'
+        - '# but do not exist'
+      exclude_dirs:
+        - '# exclude traversing these directories when creating manifest'
+      exclude_files:
+        - '# exclude these files when creating manifest (--create-manifest)'
+      html:
+        - '# create HTML directories regardless of manifest contents'
+      man_pages:
+        - '# whether to create man pages from pod'
+      perlcritic_severity:
+        - '# maximum severity level allowable'
+      pod_to_readme:
+        - '# wheter to create README.md files from pod in .pm files'
+      unit_tests:
+        - '# create unit test stubs for .pl, .cgi and .pm files'
+      version_numbers:
+        - '# whether to add version numbers in the requirements files'
+    stubs: {}
+  parms:
+    global:
+      - author
+      - email
+      - create_missing
+      - perlcritic_severity
+      - unit_tests
+      - html
+      - bash
+      - version_numbers
+      - pod_to_readme
+      - man_pages
+      - exclude_files
+      - exclude_dirs
+    stubs:
+      - pm
+      - pl
+      - cgi
+      - cfg
+      - js
+      - html
+  peCMT:
+    global:
+      author: ''
+      bash: ''
+      create_missing: ''
+      email: ''
+      exclude_dirs: ''
+      exclude_files: ''
+      html: ''
+      man_pages: ''
+      perlcritic_severity: ''
+      pod_to_readme: ''
+      unit_tests: ''
+      version_numbers: ''
+    stubs:
+      cfg: ''
+      cgi: ''
+      html: ''
+      js: ''
+      pl: ''
+      pm: ''
+  sCMT:
+    global:
+      - '# -*- mode: conf; -*-'
+      - '# This is the configuration file for `autoconf-template-perl`'
+      - '# you can place this file your $HOME directory or the directory from which you '
+      - '# will create your project'
+      - '#'
+      - '# Rules of the Road'
+      - '# -----------------'
+      - '# * boolean true values can be represented as: true, yes, 1, on'
+      - '#'
+      - '# * boolean false values can be representeda as: false, no, 0, off'
+      - '#'
+      - '# * use \ to continue lines'
+      - '#'
+      - '# * use qr// for regular expressions for exclude_files, exclude_dirs'
+      - '#'
+      - "# * directories listed without leading '/' are relative to the directory in which"
+      - '#   you are in when running `autoconf-tempate-perl` or the value of --source-dir'
+      - '#'
+      - '# * command line arguments override values in your .autoconf-template-perlrc file'
+      - '# '
+    stubs: []
+  sects:
+    - global
+    - stubs
+  startup_settings:
+    -allowcontinue: 1
+    -file: /home/rclauer/.autoconf-template-perlrc
+  v:
+    global:
+      author: Rob Lauer
+      bash: true
+      create_missing: true
+      email: rlauer6@comast.net
+      exclude_dirs: .git
+      exclude_files: 'Makefile Makefile.am Makefile.in                  qr/manifest[.]yaml/                  qr/autoconf-template-perl[.]log/                  qr/[.]in$/'
+      html: false
+      man_pages: true
+      perlcritic_severity: 3
+      pod_to_readme: true
+      unit_tests: true
+      version_numbers: true
+    stubs:
+      cfg: /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.cfg.tt
+      cgi: /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.cgi.tt
+      html: /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.html.tt
+      js: /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.js.tt
+      pl: /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.pl.tt
+      pm: /usr/local/share/perl/5.32.1/auto/share/Autoconf-Template/templates/stub.pm.tt
+bash: false
+bash_build_mode: 1
+check-dependencies: 1
+completed: !!perl/ref
+  =: 19
+conf: /home/rclauer/.autoconf-template-perlrc
+create-missing: 1
+create_missing: false
+creation_date: Wed Nov 15 08:15:26 2023
+destdir: /home/rclauer/git
+email: rlauer6@comcast.net
+exclude-dirs:
+  - .git
+exclude-files:
+  - Makefile
+  - Makefile.am
+  - Makefile.in
+  - !!perl/regexp '(?^:manifest[.]yaml)'
+  - !!perl/regexp '(?^:autoconf-template-perl[.]log)'
+  - !!perl/regexp '(?^:[.]in$)'
+exclude-templates: []
+file_list:
+  files:
+    COPYING: ''
+    VERSION: ''
+    ads_PERL_INCLUDES.m4: autotools/
+    ads_PERL_MODULE.m4: autotools/
+    ads_PROG_PERL.m4: autotools/
+    am_build_mode.m4: autotools/
+    am_perlcritic_mode.m4: autotools/
+    apache-directories.inc: includes/
+    apache_config.m4: autotools/
+    autoconf-template-perlrc: .autoconf-template-perlrc
+    ax_am_conditional_example.m4: autotools/
+    ax_deps_check.m4: autotools/
+    ax_distcheck_hack.m4: autotools/
+    bootstrap:
+      - 0755
+    directories.inc: includes/
+    gitignore: .gitignore
+    install-from-cpan.in: ''
+    perlcritic.inc: includes/
+    perlcriticrc: perlcriticrc
+    perltidyrc: perltidyrc
+    prove.sh.in: autotools/prove.sh.in
+  refresh:
+    - html/Makefile.am.tt
+    - configure.ac.tt
+    - bash/bin/bash-bin.inc.tt
+    - perl/bin/perl-bin.inc.tt
+    - perl/cgi-bin/perl-cgi-bin.inc.tt
+    - perl/lib/perl-modules.inc.tt
+    - resources/Makefile.am.tt
+    - config/Makefile.am.tt
+    - perl/bin/Makefile.am.tt
+    - perl/cgi-bin/Makefile.am.tt
+    - perl/lib/Makefile.am.tt
+    - spec.in.tt
+  templates:
+    COPYRIGHT.tt: COPYRIGHT
+    ChangeLog.tt: ChangeLog
+    Makefile.am.tt: Makefile.am
+    README.md.tt: README.md
+    ax_perlcritic_config.m4.tt: autotools/ax_perlcritic_config.m4
+    bash/bin/Makefile.am.tt: src/main/bash/bin/Makefile.am
+    bash/bin/bash-bin.inc.tt: includes/bash-bin.inc
+    config/Makefile.am.tt: config/Makefile.am
+    configure.ac.tt:
+      - 0
+      - configure.ac
+      -
+        - nl
+    git-config.tt: .git/config
+    html/Makefile.am.tt: src/main/html/Makefile.am
+    perl/bin/Makefile.am.tt: src/main/perl/bin/Makefile.am
+    perl/bin/perl-bin.inc.tt: includes/perl-bin.inc
+    perl/cgi-bin/Makefile.am.tt: src/main/perl/cgi-bin/Makefile.am
+    perl/cgi-bin/perl-cgi-bin.inc.tt: includes/perl-cgi-bin.inc
+    perl/lib/Makefile.am.tt: src/main/perl/lib/Makefile.am
+    perl/lib/perl-modules.inc.tt: includes/perl-modules.inc
+    resources/Makefile.am.tt: resources/Makefile.am
+    spec.in.tt:
+      - 0
+      - '@project@.spec.in'
+      -
+        - nl
+html: false
+html_build_mode: 0
+log-level: info
+man-pages: 1
+man_pages: true
+manifest: manifest.yaml
+perlcritic_severity: 3
+pod-to-readme: 1
+pod_to_readme: false
+progress: !!perl/hash:Term::ProgressBar
+  ETA: ~
+  Term::ProgressBar__boolean: "\x08"
+  bar_width: 180
+  fh: !!perl/ref
+    =: !!perl/glob:
+      PACKAGE: main
+      NAME: STDERR
+      IO:
+        fileno: 2
+        stat:
+          device: 66
+          inode: 11
+          mode: 8592
+          links: 1
+          uid: 1000
+          gid: 5
+          rdev: 34824
+          size: 0
+          atime: 1700054122
+          mtime: 1700054128
+          ctime: 1699989145
+          blksize: 1024
+          blocks: 0
+        tell: 0
+  last_position: 0
+  last_printed: "\rautoconf-template-perl:  95% [===========================================================================================================================================================================         ]"
+  last_update: 19
+  lbrack: '['
+  major_char: '='
+  major_units: 9
+  max_update_rate: 0.5
+  minor_char: '*'
+  minor_units: 1620
+  name: autoconf-template-perl
+  offset: 0
+  rbrack: ']'
+  scale: 1
+  silent: ''
+  start: 1700054123
+  target: 20
+  term: 1
+  term_width: 211
+project: perl-CLI-Simple
+rpm-build-mode: 1
+rpm-install-from-cpan: 1
+source-dir: /home/rclauer/git
+steps: !!perl/ref
+  =: 16
+unit-tests: 1
+unit_tests: true
+updated_date: Wed Nov 15 08:15:28 2023
+version_numbers: false
