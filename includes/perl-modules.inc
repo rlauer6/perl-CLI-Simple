@@ -76,6 +76,9 @@ CLIMODULES = \
 
 GCLIMODULES = $(CLIMODULES:.pm.in=.pm)
 
+$(GCLIMODULES): % : %.in \
+   $(GCLISIMPLEMODULES)
+
 perl5lib_clidir = $(perl5libdir)/CLI
 perl5lib_cli_DATA = $(GCLIMODULES)
 
@@ -92,7 +95,6 @@ GCLISIMPLEMODULES = $(CLISIMPLEMODULES:.pm.in=.pm)
 
 perl5lib_clisimpledir = $(perl5libdir)/CLI/Simple
 perl5lib_clisimple_DATA = $(GCLISIMPLEMODULES)
-
 
 ALLMODULES = \
     $(CLIMODULES) \

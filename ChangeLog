@@ -1,3 +1,19 @@
+Wed Nov 15 15:51:35 2023  Rob Lauer  <rlauer6@comcast.net>
+
+	[BigBang]:
+	* .gitignore: add .3man
+	* README.md: new
+	* includes/perl-modules.inc: dependencies
+	* src/examples/myscript.pm: new
+	* src/main/perl/lib/CLI/Simple.pm.in
+	- replace template with actual file
+	* src/main/perl/lib/CLI/Simple/Constants.pm.in: likewise
+	* src/main/perl/lib/CLI/Simple/Utils.pm.in: likewise
+	* src/main/perl/lib/CLI/Simple/Constants/README.md: new
+	* src/main/perl/lib/CLI/Simple/README.md: new
+	* src/main/perl/lib/CLI/Simple/Utils/README.md: new
+	* src/main/perl/lib/README.md: new
+
 Wed Nov 15 08:15:23 2023 <rlauer6@comcast.net>
 
 	[BigBang]:
