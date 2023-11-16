@@ -7,8 +7,16 @@ include $(top_srcdir)/includes/directories.inc
 include $(top_srcdir)/includes/perl-modules.inc
 include $(top_srcdir)/includes/perlcritic.inc
 
-
 #-*- mode: makefile-gmake; -*-
+
+UNIT_TESTS = \
+    t/00-cli-simple.t.in \
+    t/00-cli-simple-constants.t.in \
+    t/00-cli-simple-utils.t.in
+
+RUNIT_TESTS = $(UNIT_TESTS:.t.in=.t)
+
+GUNIT_TESTS = $(RUNIT_TESTS:.t=.test)
 
 TESTS = $(GUNIT_TESTS)
 
@@ -17,32 +25,35 @@ TESTS = $(GUNIT_TESTS)
 #
 %.test: %.t
 	test -d "$$(dirname "$@")" || $(INSTALL) -d "$$(dirname "$@")"
-	ln -sf $(abs_top_builddir)/autotools/prove.sh $@
+	ln -sf $(abs_top_builddir)/autotools/prove.sh $(abs_builddir)/$@
 	chmod +x $@
 
-$(GUNIT_TESTS): $(UNIT_TESTS)
+$(GUNIT_TESTS): $(RUNIT_TESTS)
 
-GUNIT_TESTS = $(UNIT_TESTS:.t=.test)
+$(RUNIT_TEST): $(UNIT_TESTS)
 
-UNIT_TESTS = \
-    t/00-cli-simple.t \
-    t/00-cli-simple-constants.t \
-    t/00-cli-simple-utils.t
+# we need to build .t files from .t.in files simply to get .t files
+# into the build directory for VPATH builds (make distcheck)
+%.t: %.t.in
+	test -d "$$(dirname "$@")" || $(INSTALL) -d "$$(dirname "$@")"
+	cp $< $(abs_builddir)/$@
 
-UNIT_TESTS_LOGS=$(UNIT_TESTS:.t=.log)
-UNIT_TESTS_TRS=$(UNIT_TESTS:.t=.trs)
+UNIT_TESTS_LOGS=$(RUNIT_TESTS:.t=.log)
+UNIT_TESTS_TRS=$(RUNIT_TESTS:.t=.trs)
 
-
-all:
+all: docs
 
 CLEANFILES = \
     $(GALLMODULES) \
-    $(GPERLCRITIC_PM)
+    $(GPERLCRITIC_PM) \
+    $(RUNIT_TESTS) \
+    $(GUNIT_TESTS)
 
 .PHONY: clean-local
 clean-local:
 	$(MAKE) clean-generated-man-pages
 	find . -name '*.log' -exec rm {} \; || true
+	find . -name 'README.md' -exec rm {} \; || true
 
 .PHONY: clean-generated-man-pages
 clean-generated-man-pages:

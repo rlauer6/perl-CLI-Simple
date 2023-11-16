@@ -41,6 +41,6 @@ clean-local:
 	done
 	rm -f *.tar.gz
 	rm -f *.tmp
-	if test -n "$$(ls -d Amazon-API-*)"; then \
-	  rm -rf "$$(ls -d Amazon-API-*)"; \
+	if test -n "$$(ls -d CLI-Simple-*)"; then \
+	  rm -rf "$$(ls -d CLI-Simple-*)"; \
 	fi

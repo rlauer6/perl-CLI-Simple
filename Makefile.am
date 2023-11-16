@@ -25,18 +25,6 @@ bin_SCRIPTS = install-from-cpan
 $(PACKAGE_NAME).spec: % : %.in
 	$(do_subst) $< > $@
 
-src/main/perl/lib/CLI/Simple.pm: src/main/perl/lib/CLI/Simple.pm.in
-	cd src/main/perl/lib; \
-	$(MAKE)
-
-docs: README.md
-
-README.md: src/main/perl/lib/CLI/Simple/README.md src/main/perl/lib/CLI/Simple.pm
-	cd src/main/perl/lib; \
-	$(MAKE) docs; \
-	cd -
-	cp $< $@
-
 .PHONY: cpan
 
 cpan:
@@ -49,7 +37,6 @@ cpan:
 
 dist_noinst_DATA = \
   ChangeLog \
-  README.md \
   install-from-cpan.in \
   perlcriticrc \
   $(PACKAGE_NAME).spec \
@@ -64,4 +51,4 @@ EXTRA_DIST = \
     autotools/install-sh \
     aclocal.m4
 
-DISTCHECK_CONFIGURE_FLAGS = --with-perlcritic-severity=3 --with-perl5libdir='\$(prefix)/shaer/perl5'
+DISTCHECK_CONFIGURE_FLAGS = --with-perlcritic-severity=3 --with-perl5libdir='\$(prefix)/share/perl5'

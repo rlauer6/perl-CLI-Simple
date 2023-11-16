@@ -1,3 +1,11 @@
+**/*.pc
+**/*.trs
+**/*.test
+src/main/perl/lib/t/*.t
+cpan/extra-files
+cpan/resources
+cpan/provides
+**/*.tar.gz
 **/*.1man
 **/*.3man
 *.spec

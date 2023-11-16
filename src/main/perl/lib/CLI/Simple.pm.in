@@ -15,7 +15,7 @@ use Pod::Usage;
 use CLI::Simple::Constants qw(:booleans :chars :log-levels);
 use CLI::Simple::Utils     qw(normalize_options);
 
-our $VERSION = '@PACKAGE_VERSION';
+our $VERSION = '@PACKAGE_VERSION@';
 
 use parent qw(Class::Accessor::Fast Exporter);
 
@@ -257,9 +257,9 @@ CLI::Simple
  
  sub main {
   CLI::Simple->new(
-   option_specs    => [qw( help foo=s )],
+   option_specs    => [ qw( help foo=s ) ],
    default_options => { foo => 'bar' },
-   extra_options   => [qw( logger bar )],
+   extra_options   => [ qw( logger bar ) ],
    commands        => { execute => \&execute }
  )->run;
   
@@ -267,21 +267,41 @@ CLI::Simple
 
 Tired of writing the same 'ol boilerplate code for command line
 scripts? Want a standard, simple way to create a Perl script?
-C<CLI::Simple> makes it easy to create scripts that take options,
-commands and arguments.
+C<CLI::Simple> makes it easy to create scripts that take I<options>,
+I<commands> and I<arguments>.
 
-Command line scripts often take options, sometimes a command and
-perhaps arguments to those commands.  For example, consider the script
-C<myscript> that takes options and implements a few commands (I<biz>, I<buz>) with
+=head2 Features
+
+=over 5
+
+=item * accept command line arguments ala L<GetOptions::Long>
+
+=item * supports commands and command arguments
+
+=item * automatically add a logger
+
+=item * easily add usage notes
+
+=item * create setter/getters for your script
+
+=back
+
+Command line scripts often take I<options>, sometimes a I<command> and
+perhaps I<arguments> to those commands.  For example, consider the script
+C<myscript> that takes options and implements a few commands (I<send-message>, I<receive-message>) that also take with
 arguments.
 
  myscript [options] command args
 
+or
+
+ myscript command [options] args
+
 Examples:
 
- myscript --foo bar --log-level debug biz 1
+ myscript --foo bar --log-level debug send-message "Hello World" now
 
- myscript --bar --log-level info buz message "Hello World"
+ myscript --bar --log-level info receive-message
 
 Using C<CLI::Simple> to implement this script looks like this...
 
@@ -481,6 +501,42 @@ will implement your script as the C<default> command.
 =item Do I have to subclass C<CLI::Simple>?
 
 No, see above example,
+
+=item How can I use the "modulino pattern"?
+
+I like to implement scripts as a Perl class and use the so-called
+"modulino" pattern popularized by Brian d foy. Essentially you create
+a class that looks something like this:
+
+ package Foo;
+
+ caller or  __PACKAGE__->main();
+
+ sub main {
+   ....
+ }
+
+Using this pattern you can write Perl modules that can also be used as
+a script or test harness.
+
+To make it easy to use such a module, I create a C<bash> script that
+calls the module with the arguments passed on the command line.
+
+ #!/usr/bin/env bash
+ 
+ MODULINO="MyScript"
+ MODULINO_PATH="${MODULINO//::/\/}.pm"
+ 
+ MODULINO_RUN=$(perl -M$MODULINO -e 'print $INC{"'$MODULINO_PATH'"}';)
+ 
+ if test -z "$MODULINO_RUN"; then
+     echo "$MODULINO is not installed"
+     exit 1;
+ fi
+ 
+ perl $MODULINO_RUN "$@"
+
+I then might name this script something like C<myscript>.
 
 =back
 

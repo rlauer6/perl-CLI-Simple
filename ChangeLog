@@ -1,3 +1,23 @@
+Thu Nov 16 13:36:17 2023  Rob Lauer  <rlauer6@comcast.net>
+
+	[make check]:
+	* includes/perlcritic.inc: add pbp to theme
+	* .gitignore: + generatedd files cpan/, t/
+	* Makefile.am: remove README.md from build
+	* README.md: symlink to module README.md
+	* cpan/Makefile.am: rm directory if created
+	* src/main/perl/lib/CLI/Simple.pm.in: pod tweaks
+	* src/main/perl/lib/Makefile.am: build .t files from .t.in
+	* src/main/perl/lib/README.md: generated
+	* src/main/perl/lib/CLI/Simple/README.md: likewise
+
+Thu Nov 16 07:53:09 2023  Rob Lauer  <rlauer6@comcast.net>
+
+	[docs/wip]:
+	* README.md: generated
+	* src/main/perl/lib/CLI/Simple.pm.in
+	* src/main/perl/lib/CLI/Simple/README.md
+
 Wed Nov 15 16:25:19 2023  Rob Lauer  <rlauer6@comcast.net>
 
 	[docs]:

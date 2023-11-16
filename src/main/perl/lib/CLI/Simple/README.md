@@ -12,9 +12,9 @@ CLI::Simple
     
     sub main {
      CLI::Simple->new(
-      option_specs    => [qw( help foo=s )],
+      option_specs    => [ qw( help foo=s ) ],
       default_options => { foo => 'bar' },
-      extra_options   => [qw( logger bar )],
+      extra_options   => [ qw( logger bar ) ],
       commands        => { execute => \&execute }
     )->run;
      
@@ -23,21 +23,33 @@ CLI::Simple
 
 Tired of writing the same 'ol boilerplate code for command line
 scripts? Want a standard, simple way to create a Perl script?
-`CLI::Simple` makes it easy to create scripts that take options,
-commands and arguments.
+`CLI::Simple` makes it easy to create scripts that take _options_,
+_commands_ and _arguments_.
 
-Command line scripts often take options, sometimes a command and
-perhaps arguments to those commands.  For example, consider the script
-`myscript` that takes options and implements a few commands (_biz_, _buz_) with
+## Features
+
+- accept command line arguments ala [GetOptions::Long](https://metacpan.org/pod/GetOptions%3A%3ALong)
+- supports commands and command arguments
+- automatically add a logger
+- easily add usage notes
+- create setter/getters for your script
+
+Command line scripts often take _options_, sometimes a _command_ and
+perhaps _arguments_ to those commands.  For example, consider the script
+`myscript` that takes options and implements a few commands (_send-message_, _receive-message_) that also take with
 arguments.
 
     myscript [options] command args
 
+or
+
+    myscript command [options] args
+
 Examples:
 
-    myscript --foo bar --log-level debug biz 1
+    myscript --foo bar --log-level debug send-message "Hello World" now
 
-    myscript --bar --log-level info buz message "Hello World"
+    myscript --bar --log-level info receive-message
 
 Using `CLI::Simple` to implement this script looks like this...
 
@@ -78,7 +90,7 @@ Instantiates a new `CLI::Simple` object.
 ## run
 
 Execute the script with the given options, commands and arguments. The
-`run` method interprets the command line and passe control to your command
+`run` method interprets the command line and pass control to your command
 subroutines. Your subroutines should return a 0 for success and a
 non-zero value for failure.  This error code is passed to the shell as
 the script return code.
@@ -235,6 +247,42 @@ to retrieve the logger.
 - Do I have to subclass `CLI::Simple`?
 
     No, see above example,
+
+- How can I use the "modulino pattern"?
+
+    I like to implement scripts as a Perl class and use the so-called
+    "modulino" pattern popularized by Brian d foy. Essentially you create
+    a class that looks something like this:
+
+        package Foo;
+
+        caller or  __PACKAGE__->main();
+
+        sub main {
+          ....
+        }
+
+    Using this pattern you can write Perl modules that can also be used as
+    a script or test harness.
+
+    To make it easy to use such a module, I create a `bash` script that
+    calls the module with the arguments passed on the command line.
+
+        #!/usr/bin/env bash
+        
+        MODULINO="MyScript"
+        MODULINO_PATH="${MODULINO//::/\/}.pm"
+        
+        MODULINO_RUN=$(perl -M$MODULINO -e 'print $INC{"'$MODULINO_PATH'"}';)
+        
+        if test -z "$MODULINO_RUN"; then
+            echo "$MODULINO is not installed"
+            exit 1;
+        fi
+        
+        perl $MODULINO_RUN "$@"
+
+    I then might name this script something like `myscript`.
 
 # LICENSE AND COPYRIGHT
 
