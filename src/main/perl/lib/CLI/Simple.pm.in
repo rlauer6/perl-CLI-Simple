@@ -66,9 +66,9 @@ sub use_log4perl {
 ########################################################################
 sub new {
 ########################################################################
-  my ( $class, @parms ) = @_;
+  my ( $class, @params ) = @_;
 
-  my %args ref $parms[0] ? %{ $parms[0] } : @parms;
+  my %args = ref $params[0] ? %{ $params[0] } : @params;
 
   my ( $default_options, $option_specs, $commands, $extra_options )
     = @args{qw(default_options option_specs commands extra_options)};

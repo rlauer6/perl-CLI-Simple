@@ -6,17 +6,26 @@ CLI::Simple
 
     package MyScript;
 
+    use strict;
+    use warnings;
+
     use parent qw(CLI::Simple);
     
     caller or __PACKAGE__->main();
     
+    sub execute { ... }
+    
+    sub list { ... }
+
     sub main {
      CLI::Simple->new(
       option_specs    => [ qw( help foo=s ) ],
       default_options => { foo => 'bar' },
       extra_options   => [ qw( logger bar ) ],
-      commands        => { execute => \&execute }
+      commands        => { execute => \&execute, list => \&list,  }
     )->run;
+
+    1;
      
 
 # DESCRIPTION
@@ -35,9 +44,9 @@ _commands_ and _arguments_.
 - create setter/getters for your script
 
 Command line scripts often take _options_, sometimes a _command_ and
-perhaps _arguments_ to those commands.  For example, consider the script
-`myscript` that takes options and implements a few commands (_send-message_, _receive-message_) that also take with
-arguments.
+perhaps _arguments_ to those commands.  For example, consider the
+script `myscript` that takes options and implements a few commands
+(_send-message_, _receive-message_) that also take arguments.
 
     myscript [options] command args
 
@@ -59,11 +68,11 @@ Using `CLI::Simple` to implement this script looks like this...
 
     caller or __PACKAGE__main();
 
-    sub foo {..}
+    sub send_message {..}
 
     sub default {...}
 
-    sub bar {...}
+    sub receive_message {...}
     
     sub main {
       return __PACKAGE__->new(
@@ -75,8 +84,8 @@ Using `CLI::Simple` to implement this script looks like this...
           )
         ],
         commands => {
-          bar => \&bar,
-          foo => \&foo,
+          send    => \&send_message,
+          receive => \&receive_message,
         },
       )->run;
     }
@@ -84,6 +93,45 @@ Using `CLI::Simple` to implement this script looks like this...
 # METHODS AND SUBROUTINES
 
 ## new
+
+    new( args )
+
+`args` is a hash or hash reference containing the following keys:
+
+- commands (required)
+
+    A hash reference containing the command names and a code reference to
+    the subroutines that implement the command.
+
+    Example:
+
+        { 
+          send    => \&send_message,
+          receive => \&receive_message,
+        }
+
+    If your script does accept command, set a `default` key to the
+    subroutine or method that will implement your script.
+
+        { default => \&main }
+
+- default\_options (optional)
+
+    A hash reference that contains the default values for your options.  
+
+- extra\_options
+
+    If you want to create additional setters or getters, set
+    `extra_options` to an array variable names.
+
+    Example:
+
+        extra_options => [ qw(foo bar baz) ]
+
+- option\_specs (required)
+
+    An array reference of option specfications.  These are the same as
+    those passed to `Getopt::Long`.
 
 Instantiates a new `CLI::Simple` object.
 
