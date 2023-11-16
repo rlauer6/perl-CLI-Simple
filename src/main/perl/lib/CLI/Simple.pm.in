@@ -66,7 +66,9 @@ sub use_log4perl {
 ########################################################################
 sub new {
 ########################################################################
-  my ( $class, %args ) = @_;
+  my ( $class, @parms ) = @_;
+
+  my %args ref $parms[0] ? %{ $parms[0] } : @parms;
 
   my ( $default_options, $option_specs, $commands, $extra_options )
     = @args{qw(default_options option_specs commands extra_options)};
@@ -251,17 +253,26 @@ CLI::Simple
 
  package MyScript;
 
+ use strict;
+ use warnings;
+
  use parent qw(CLI::Simple);
  
  caller or __PACKAGE__->main();
  
+ sub execute { ... }
+ 
+ sub list { ... }
+
  sub main {
   CLI::Simple->new(
    option_specs    => [ qw( help foo=s ) ],
    default_options => { foo => 'bar' },
    extra_options   => [ qw( logger bar ) ],
-   commands        => { execute => \&execute }
+   commands        => { execute => \&execute, list => \&list,  }
  )->run;
+
+ 1;
   
 =head1 DESCRIPTION
 
@@ -287,9 +298,9 @@ I<commands> and I<arguments>.
 =back
 
 Command line scripts often take I<options>, sometimes a I<command> and
-perhaps I<arguments> to those commands.  For example, consider the script
-C<myscript> that takes options and implements a few commands (I<send-message>, I<receive-message>) that also take with
-arguments.
+perhaps I<arguments> to those commands.  For example, consider the
+script C<myscript> that takes options and implements a few commands
+(I<send-message>, I<receive-message>) that also take arguments.
 
  myscript [options] command args
 
@@ -311,11 +322,11 @@ Using C<CLI::Simple> to implement this script looks like this...
 
  caller or __PACKAGE__main();
 
- sub foo {..}
+ sub send_message {..}
 
  sub default {...}
 
- sub bar {...}
+ sub receive_message {...}
  
  sub main {
    return __PACKAGE__->new(
@@ -327,8 +338,8 @@ Using C<CLI::Simple> to implement this script looks like this...
        )
      ],
      commands => {
-       bar => \&bar,
-       foo => \&foo,
+       send    => \&send_message,
+       receive => \&receive_message,
      },
    )->run;
  }
@@ -336,6 +347,49 @@ Using C<CLI::Simple> to implement this script looks like this...
 =head1 METHODS AND SUBROUTINES
 
 =head2 new
+
+ new( args )
+
+C<args> is a hash or hash reference containing the following keys:
+
+=over 5
+
+=item commands (required)
+
+A hash reference containing the command names and a code reference to
+the subroutines that implement the command.
+
+Example:
+
+ { 
+   send    => \&send_message,
+   receive => \&receive_message,
+ }
+
+If your script does accept command, set a C<default> key to the
+subroutine or method that will implement your script.
+
+ { default => \&main }
+
+=item default_options (optional)
+
+A hash reference that contains the default values for your options.  
+
+=item extra_options
+
+If you want to create additional setters or getters, set
+C<extra_options> to an array variable names.
+
+Example:
+
+ extra_options => [ qw(foo bar baz) ]
+
+=item option_specs (required)
+
+An array reference of option specfications.  These are the same as
+those passed to C<Getopt::Long>.
+
+=back
 
 Instantiates a new C<CLI::Simple> object.
 
