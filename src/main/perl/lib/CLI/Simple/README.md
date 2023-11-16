@@ -150,6 +150,17 @@ the script return code.
 In scalar context returns a reference to the hash of arguments. In
 array context will return a hash of key/value pairs.
 
+Example:
+
+    sub send_message {
+      my ($self) = @_;
+
+      my (%args) = $self->get_args(qw(message email));
+      
+      _send_message($arg{message}, $args{email});
+
+     ...
+
 ## init
 
 If you define your own `init()` function, it will be called by the
@@ -196,7 +207,7 @@ rather than '\_' for option names.
 # COMMAND ARGUMENTS
 
 If you want to allow your commands to accept positional arguments you
-can retrieve them as named hash elements.  This makes your code much
+can retrieve them as named hash elements.  This can make your code much
 easier to read and understand.
 
     sub send_mesage {
@@ -207,6 +218,10 @@ easier to read and understand.
       send_sms_mesage($args{phone_number}, $args{message});
       ...
     }
+
+If pass an empty list then all of the command arguments will be returned.
+
+    my ($phone_number, $message) = $self->get_args;
 
 # SETTING DEFAULT VALUES FOR OPTIONS
 
@@ -313,24 +328,17 @@ to retrieve the logger.
     Using this pattern you can write Perl modules that can also be used as
     a script or test harness.
 
-    To make it easy to use such a module, I create a `bash` script that
+    To make it easy to use such a module, I've created a `bash` script that
     calls the module with the arguments passed on the command line.
 
-        #!/usr/bin/env bash
-        
-        MODULINO="MyScript"
-        MODULINO_PATH="${MODULINO//::/\/}.pm"
-        
-        MODULINO_RUN=$(perl -M$MODULINO -e 'print $INC{"'$MODULINO_PATH'"}';)
-        
-        if test -z "$MODULINO_RUN"; then
-            echo "$MODULINO is not installed"
-            exit 1;
-        fi
-        
-        perl $MODULINO_RUN "$@"
+    The script (`modulino`) is include in this distribution.
 
-    I then might name this script something like `myscript`.
+    Use it to create a symlink to itself that will load your Perl module
+    and run your modulino. Running `modulino` will echo a command you can
+    run to create the symlink.
+
+        >modulino Foo::Bar
+        ln -s /usr/local/bin/modulino foo_bar
 
 # LICENSE AND COPYRIGHT
 

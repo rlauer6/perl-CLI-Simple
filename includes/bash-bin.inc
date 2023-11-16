@@ -15,4 +15,5 @@
 # See the README.md in the `autoconf-template-perl` project for more
 # details.
 
-BASHSCRIPTS = 
+BASHSCRIPTS = \
+    modulino.sh.in

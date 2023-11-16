@@ -1,3 +1,19 @@
+Thu Nov 16 17:14:27 2023  Rob Lauer  <rlauer6@comcast.net>
+
+	[modulino]:
+	* .gitignore: add modulino
+	* cpan/buildspec.yml
+	- add src/examples
+	- add modulino script
+	* src/examples/MyScript.pm: renamed from myscript.pm
+	* includes/bash-bin.inc: add modulino.sh.in
+	* src/main/bash/bin/Makefile.am: likewise
+	* src/main/perl/lib/Makefile.am: build .t files
+	* src/main/perl/lib/CLI/Simple/README.md: generated
+	* src/main/perl/lib/CLI/Simple.pm.in
+	- pod tweaks
+	(get_args): return all args if empty list of var names
+
 Thu Nov 16 15:18:56 2023  Rob Lauer  <rlauer6@comcast.net>
 
 	[pod tweaks]:

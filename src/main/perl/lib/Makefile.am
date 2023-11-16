@@ -41,7 +41,7 @@ $(RUNIT_TEST): $(UNIT_TESTS)
 UNIT_TESTS_LOGS=$(RUNIT_TESTS:.t=.log)
 UNIT_TESTS_TRS=$(RUNIT_TESTS:.t=.trs)
 
-all: docs
+all: docs $(RUNIT_TESTS)
 
 CLEANFILES = \
     $(GALLMODULES) \
