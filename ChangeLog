@@ -1,3 +1,16 @@
+Sat Nov 18 08:26:26 2023  Rob Lauer  <rlauer6@comcast.net>
+
+	[dependencies]:
+	* VERSION: bump
+	* autotools/ax_requirements_check.m4: update dependencies
+	* requires.json: likewise
+	* requires.txt: likewise
+	* cpan/requires: likewise
+	* cpan/buildspec.yml: typo in web address
+	* configure.ac: add perlcritic config to configure output
+	* manifest.yaml: removed
+	* src/main/perl/lib/CLI/Simple/Utils.pm.in: @PACKAGE_VERSION@
+
 Thu Nov 16 17:14:27 2023  Rob Lauer  <rlauer6@comcast.net>
 
 	[modulino]:

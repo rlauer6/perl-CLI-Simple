@@ -21,7 +21,7 @@ provides:
 resources:
   homepage: http://github.com/rlauer6/perl-CLI-Simple
   bugtracker:
-    web: http://github.com/rlauer6/perl-CLI-Simple-API/issues
+    web: http://github.com/rlauer6/perl-CLI-Simple/issues
     mailto: rlauer6@comcast.net
   repository:
     url: git://github.com/rlauer6/perl-CLI-Simple.git
