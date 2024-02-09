@@ -68,7 +68,7 @@ Using `CLI::Simple` to implement this script looks like this...
 
     caller or __PACKAGE__main();
 
-    sub send_message {..}
+    sub send_message {...}
 
     sub default {...}
 
@@ -110,7 +110,7 @@ Using `CLI::Simple` to implement this script looks like this...
           receive => \&receive_message,
         }
 
-    If your script does accept command, set a `default` key to the
+    If your script does not accept a command, set a `default` key to the
     subroutine or method that will implement your script.
 
         { default => \&main }
@@ -148,7 +148,7 @@ the script return code.
     get_args(var-name, ... );
 
 In scalar context returns a reference to the hash of arguments. In
-array context will return a hash of key/value pairs.
+array context will return a list of key/value pairs.
 
 Example:
 
@@ -210,7 +210,7 @@ If you want to allow your commands to accept positional arguments you
 can retrieve them as named hash elements.  This can make your code much
 easier to read and understand.
 
-    sub send_mesage {
+    sub send_message {
       my ($self) = @_;
 
       my %args = $self->get_args(qw(phone_number message));
@@ -338,7 +338,7 @@ to retrieve the logger.
     run to create the symlink.
 
         >modulino Foo::Bar
-        ln -s /usr/local/bin/modulino foo_bar
+        ln -s /usr/local/bin/modulino foo-bar
 
 # LICENSE AND COPYRIGHT
 
