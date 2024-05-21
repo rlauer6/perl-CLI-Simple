@@ -382,14 +382,15 @@ to retrieve the logger.
 
     The script (`modulino`) is include in this distribution.
 
-    You can also us the include `create-modulino` script to create a
+    You can also us the include `create-modulino.pl` script to create a
     symbolic link to your class that will be executed as if it is a Perl
     script if you've implemented the modulino pattern described above.
 
-        sudo create-modulino Foo::Bar foo-bar
+        sudo create-modulino.pl Foo::Bar foo-bar
 
     If you do not provide and alias name as the second argument the script
-    will not create symbolic link.
+    will create a copy of the `modulino` script as a normalized name of
+    your module but will not create a symbolic link.
 
     The script essentially executes the recipe below.
 
@@ -427,6 +428,6 @@ Rob Lauer - <rlauer6@comcast.net>
 
 Hey! **The above document had some coding errors, which are explained below:**
 
-- Around line 676:
+- Around line 675:
 
     You forgot a '=back' before '=head1'

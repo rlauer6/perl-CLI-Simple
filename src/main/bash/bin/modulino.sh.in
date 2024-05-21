@@ -43,5 +43,5 @@ else
         exit 1;
     fi
     
-    echo perl $MODULINO_RUN "$@"
+    perl $MODULINO_RUN "$@"
 fi

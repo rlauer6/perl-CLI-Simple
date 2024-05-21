@@ -37,8 +37,6 @@ sub main {
     unlink "$path/$modulino_name";
   }
 
-  print {*STDERR} Dumper( [ path => $path, modulino => "$path/$modulino_name" ] );
-
   copy( $path, "$executable_path/$modulino_name" );
 
   chmod oct('0755'), "$executable_path/$modulino_name";
