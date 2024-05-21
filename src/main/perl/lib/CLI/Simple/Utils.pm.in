@@ -5,8 +5,8 @@ use warnings;
 
 use Carp;
 use Data::Dumper;
-use English  qw(-no_match_chars);
-use JSON::PP qw(decode_json);
+use English qw(-no_match_chars);
+use JSON qw(decode_json);
 
 use parent qw(Exporter);
 
@@ -67,7 +67,7 @@ sub dump_json {
 ########################################################################
   my ($obj) = @_;
 
-  return JSON::PP->new->pretty->encode($obj);
+  return JSON->new->pretty->encode($obj);
 }
 
 1;

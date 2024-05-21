@@ -11,7 +11,7 @@ include $(top_srcdir)/includes/apache-directories.inc
 ACLOCAL_AMFLAGS = -I autotools
 
 requires.txt:
-	autoconf-ax-check-requirements -f text -o $@
+	autoconf-ax-requirements-check -f text -o $@
 
 dist_resources_DATA = \
     requires.txt

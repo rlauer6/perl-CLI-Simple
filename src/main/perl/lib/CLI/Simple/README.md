@@ -377,29 +377,27 @@ to retrieve the logger.
 
         1;
 
-         
-
     To make it easy to use such a module, I've created a `bash` script that
     calls the module with the arguments passed on the command line.
 
     The script (`modulino`) is include in this distribution.
 
-    You can also us it to create a symlink to itself that will load your Perl module
-    and run your modulino. Running `modulino` will **echo** a command you can
-    run to create the symlink.
+    You can also us the include `create-modulino` script to create a
+    symbolic link to your class that will be executed as if it is a Perl
+    script if you've implemented the modulino pattern described above.
 
-        >modulino Foo::Bar
-        ln -s /usr/local/bin/modulino foo-bar
+        sudo create-modulino Foo::Bar foo-bar
 
-    _Note: This does not create the symlink, it simply echos the command
-    to do so._
+    If you do not provide and alias name as the second argument the script
+    will not create symbolic link.
 
-    It attempts to turn your class name into something more suitable as
-    script name.  For simple class names like `Foo::Bar` this works
-    fine. If you have a class with a mix of CamelCase names you'll need to
-    follow the following recipe:
+    The script essentially executes the recipe below.
 
-    - 1. Copy the `modulino` script using a name that convert the first letter of the class to lower case and any CamelCased words inside the class name to upper case with all words snake caseds.  Example: `Module::ScanDeps::FindRequires` becomes: `module_scanDeps_findRequires`.
+    - 1. Copy the `modulino` script using a name that convert the
+    first letter of the class to lower case and any CamelCased words
+    inside the class name to lower case with all words snake caseds.
+    Example: `Module::ScanDeps::FindRequires` becomes:
+    `module_scanDeps_findRequires`.
 
             sudo cp /usr/local/bin/modulino /usr/local/bin/module_scanDeps_findRequire
             
@@ -408,7 +406,7 @@ to retrieve the logger.
 
             chmod 0755 module_scanDeps_findRequire
 
-    - 3. Create a symlink with a name of your chosing the new script.
+    - 3. Create a symlink with a name of your chosing to the new script.
 
             sudo ln -s /usr/local/bin/module_scanDeps_findRequire /usr/local/bin/find-requires 
 
@@ -429,6 +427,6 @@ Rob Lauer - <rlauer6@comcast.net>
 
 Hey! **The above document had some coding errors, which are explained below:**
 
-- Around line 677:
+- Around line 676:
 
     You forgot a '=back' before '=head1'

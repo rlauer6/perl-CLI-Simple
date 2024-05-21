@@ -69,7 +69,8 @@ PERLINCLUDE = \
 # sent to the template process (perl_scripts) is a hash where each key represents the 
 # sub-directory and the values are arrays of files. Only 1 sub-directlory is supported
 
-PERLSCRIPTS = 
+PERLSCRIPTS = \
+    create-modulino.pl.in
 
 GPERLSCRIPTS = $(PERLSCRIPTS:.pl.in=.pl)
 
@@ -77,8 +78,6 @@ bindir = @bindir@
 
 bin_SCRIPTS = \
     $(GPERLSCRIPTS)
-
-
 
 ALLSCRIPTS = 
 
@@ -92,7 +91,6 @@ PERLCRITIC_PL = \
 # We may have multiple files with the same name, so generating a man page for each 
 # might create duplicate man pages. To fix this, man pages will be installed in slightly
 # non-obvious way {dirname}-{file}.1man
-
 
 MANPAGES = 
 
