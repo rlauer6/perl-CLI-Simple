@@ -16,4 +16,5 @@
 # details.
 
 BASHSCRIPTS = \
-    modulino.sh.in
+    modulino.sh.in \
+    create-modulino.sh.in

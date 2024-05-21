@@ -1,6 +1,0 @@
-Class::Accessor::Fast 0
-JSON::PP 0
-List::Util 1.56
-Log::Log4perl 0
-Log::Log4perl::Level 0
-Readonly 0

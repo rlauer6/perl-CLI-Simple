@@ -1,6 +1,6 @@
 # NAME
 
-CLI::Simple
+CLI::Simple - a framework for creating option driven Perl scripts
 
 # SYNOPIS
 
@@ -13,15 +13,27 @@ CLI::Simple
     
     caller or __PACKAGE__->main();
     
-    sub execute { ... }
+    sub execute {
+      my ($self) = @_;
+
+      # retrieve a CLI option   
+      my $file = $self->get_file;
+      ...
+    }
     
-    sub list { ... }
+    sub list { 
+      my ($self) = @_
+
+      # retrieve a command argument with name
+      my $file = $self->get_arg(qw(file));
+      ...
+    }
 
     sub main {
      CLI::Simple->new(
-      option_specs    => [ qw( help foo=s ) ],
-      default_options => { foo => 'bar' },
-      extra_options   => [ qw( logger bar ) ],
+      option_specs    => [ qw( help formt=s ) ],
+      default_options => { format => 'json' }, # set some defaults
+      extra_options   => [ qw( content ) ], # non-option, setter/getter
       commands        => { execute => \&execute, list => \&list,  }
     )->run;
 
@@ -41,7 +53,7 @@ _commands_ and _arguments_.
 - supports commands and command arguments
 - automatically add a logger
 - easily add usage notes
-- create setter/getters for your script
+- automatically create setter/getters for your script
 
 Command line scripts often take _options_, sometimes a _command_ and
 perhaps _arguments_ to those commands.  For example, consider the
@@ -90,6 +102,8 @@ Using `CLI::Simple` to implement this script looks like this...
       )->run;
     }
 
+    1;
+
 # METHODS AND SUBROUTINES
 
 ## new
@@ -122,7 +136,7 @@ Using `CLI::Simple` to implement this script looks like this...
 - extra\_options
 
     If you want to create additional setters or getters, set
-    `extra_options` to an array variable names.
+    `extra_options` to an array of names.
 
     Example:
 
@@ -272,8 +286,8 @@ If the command specified is 'help' or if you have added an optional
 # LOGGING
 
 `CLI::Simple` will enable you to automatically add logging to your
-scrip using a [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) logger. You can pass in a `Log4perl` configuration
-string or let the class instantiat `Log::Log4perl` in easy mode.
+script using a [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) logger. You can pass in a `Log4perl` configuration
+string or let the class instantiate `Log::Log4perl` in easy mode.
 
 Do this at the top of your class:
 
@@ -285,14 +299,20 @@ to retrieve the logger.
 
 # FAQ
 
+- How do I execute some startup code before my command runs?
+
+    The `new` constructor will execute an `init()` method prior to
+    returning. Implement your own ["init"](#init) function which has all of the
+    commands and arguments available to it at that time.
+
 - Do I need to implement commands?
 
     No, but if you don't you must provide the name of the subroutine that
-    will implement your script as the `default` command.
+    will implement your script logic as the `default` command.
 
         use CLI::Simple;
 
-        sub main {
+        sub do_it {
           my ($cli) = @_;
 
           # do something useful...
@@ -302,7 +322,7 @@ to retrieve the logger.
           default_option => { foo => 'bar' },
           option_specs   => [ qw(foo=s bar=s) ],
           extra_options  => [ qw(biz buz baz) ],
-          commands       => { default => \&main },
+          commands       => { default => \&do_it },
         );
 
         $cli->run;
@@ -311,7 +331,7 @@ to retrieve the logger.
 
     No, see above example,
 
-- How can I use the "modulino pattern"?
+- How do I turn my class into a script?
 
     I like to implement scripts as a Perl class and use the so-called
     "modulino" pattern popularized by Brian d foy. Essentially you create
@@ -325,20 +345,72 @@ to retrieve the logger.
           ....
         }
 
+        1;
+
     Using this pattern you can write Perl modules that can also be used as
-    a script or test harness.
+    a script or test harness for your class.
+
+        package MyScript;
+
+        use strict;
+        use warnings;
+
+        caller or  __PACKAGE__->main();
+
+        sub do_it {
+          my ($cli) = @_;
+
+          # do something useful...
+        }
+
+        sub main {
+
+          my $cli = CLI::Simple->new(
+            default_option => { foo => 'bar' },
+            option_specs   => [ qw(foo=s bar=s) ],
+            extra_options  => [ qw(biz buz baz) ],
+            commands       => { default => \&do_it },
+          );
+
+         exit $cli->run;
+        }
+
+        1;
+
+         
 
     To make it easy to use such a module, I've created a `bash` script that
     calls the module with the arguments passed on the command line.
 
     The script (`modulino`) is include in this distribution.
 
-    Use it to create a symlink to itself that will load your Perl module
-    and run your modulino. Running `modulino` will echo a command you can
+    You can also us it to create a symlink to itself that will load your Perl module
+    and run your modulino. Running `modulino` will **echo** a command you can
     run to create the symlink.
 
         >modulino Foo::Bar
         ln -s /usr/local/bin/modulino foo-bar
+
+    _Note: This does not create the symlink, it simply echos the command
+    to do so._
+
+    It attempts to turn your class name into something more suitable as
+    script name.  For simple class names like `Foo::Bar` this works
+    fine. If you have a class with a mix of CamelCase names you'll need to
+    follow the following recipe:
+
+    - 1. Copy the `modulino` script using a name that convert the first letter of the class to lower case and any CamelCased words inside the class name to upper case with all words snake caseds.  Example: `Module::ScanDeps::FindRequires` becomes: `module_scanDeps_findRequires`.
+
+            sudo cp /usr/local/bin/modulino /usr/local/bin/module_scanDeps_findRequire
+            
+
+    - 2. Make sure the new script is executable.
+
+            chmod 0755 module_scanDeps_findRequire
+
+    - 3. Create a symlink with a name of your chosing the new script.
+
+            sudo ln -s /usr/local/bin/module_scanDeps_findRequire /usr/local/bin/find-requires 
 
 # LICENSE AND COPYRIGHT
 
@@ -352,3 +424,11 @@ modified under the same terms as Perl itself.
 # AUTHOR
 
 Rob Lauer - <rlauer6@comcast.net>
+
+# POD ERRORS
+
+Hey! **The above document had some coding errors, which are explained below:**
+
+- Around line 677:
+
+    You forgot a '=back' before '=head1'

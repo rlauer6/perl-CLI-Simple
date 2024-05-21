@@ -50,6 +50,7 @@ src/main/perl/**/*.cgi
 src/main/perl/**/*.xml
 src/main/perl/lib/*.tpl
 src/main/bash/bin/modulino
+src/main/bash/bin/create-modulino
 config/*.xml
 src/main/bash/**/*.sh
 autotools/prove.sh

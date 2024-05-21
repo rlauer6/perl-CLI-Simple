@@ -1,3 +1,16 @@
+Tue May 21 09:33:40 2024  Rob Lauer  <rlauer6@comcast.net>
+
+	[0.0.4]:
+	* VERSION: bump
+	* src/main/bash/bin/create-modulino.sh.in: new
+	* src/main/bash/bin/Makefile.am: add above to build
+	* includes/bash-bin.inc: likewise
+	* src/main/bash/bin/modulino.sh.in
+	- use realpath/readlink to allow alias names
+	* src/main/perl/lib/CLI/Simple.pm.in
+	- use JSON, no JSON::PP
+	- pod fixes, better explanation of modulinos
+
 Sun Dec 10 16:46:14 2023  Rob Lauer  <rlauer6@comcast.net>
 
 	[0.0.3]:
@@ -7,7 +20,7 @@ Sun Dec 10 16:46:14 2023  Rob Lauer  <rlauer6@comcast.net>
 	* src/main/bash/bin/modulino.sh.in
 	- use -, not _ for separator
 	- use perl, not tr
-	
+
 Sat Nov 18 08:26:26 2023  Rob Lauer  <rlauer6@comcast.net>
 
 	[dependencies]:

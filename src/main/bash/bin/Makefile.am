@@ -11,10 +11,6 @@ bashrun = @BASHRUN@
 GBASHSCRIPTS = $(BASHSCRIPTS:.sh.in=.sh)
 GBINSCRIPTS = $(GBASHSCRIPTS:.sh=)
 
-$(GBINSCRIPTS): $(GBASHSCRIPTS)
-	cp $< $@
-	chmod +x $@
-
 bin_SCRIPTS = $(GBINSCRIPTS)
 
 libexec_SCRIPTS = $(GBASHSCRIPTS)
@@ -22,6 +18,10 @@ libexec_SCRIPTS = $(GBASHSCRIPTS)
 dist_noinst_DATA = $(BASHSCRIPTS)
 
 @do_subst_command@
+
+$(GBINSCRIPTS): % : %.sh
+	cp $< $@
+	chmod 0755 $@
 
 $(GBASHSCRIPTS): % : %.in
 	$(do_subst) $< > $@
