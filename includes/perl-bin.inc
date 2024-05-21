@@ -57,9 +57,11 @@ PERLINCLUDE = \
 	$(do_subst) $< > $@
 	>&2 echo "WARNING: $@"
 	$(perlwc) -wc $(PERLINCLUDE) $@ || { rm $@ && exit 1; }
+	chmod +x $@
 
 %.cgi: %.pl
 	cp $< $@
+	chmod +x $@
 
 %.md : %.pm
 	$(POD2MARKDOWN) < $< >$@

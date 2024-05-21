@@ -91,9 +91,7 @@ sub new {
   $option_specs    //= $OPTION_SPECS;
   $commands        //= $COMMANDS;
 
-  croak 'usage: '
-    . $class
-    . '->new( option_specs => specs, commands => commands, [defaults => default-options)'
+  croak 'usage: ' . $class . '->new( option_specs => specs, commands => commands, [defaults => default-options)'
     if !$option_specs || !$commands;
 
   $default_options //= {};
@@ -642,14 +640,15 @@ calls the module with the arguments passed on the command line.
 
 The script (C<modulino>) is include in this distribution.
 
-You can also us the include C<create-modulino> script to create a
+You can also us the include C<create-modulino.pl> script to create a
 symbolic link to your class that will be executed as if it is a Perl
 script if you've implemented the modulino pattern described above.
 
-  sudo create-modulino Foo::Bar foo-bar
+  sudo create-modulino.pl Foo::Bar foo-bar
 
 If you do not provide and alias name as the second argument the script
-will not create symbolic link.
+will create a copy of the C<modulino> script as a normalized name of
+your module but will not create a symbolic link.
 
 The script essentially executes the recipe below.
 

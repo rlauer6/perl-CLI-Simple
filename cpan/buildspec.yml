@@ -12,6 +12,7 @@ path:
   pm_module: src/main/perl/lib
   tests: src/main/perl/lib/t
   exe_files: src/main/bash/bin
+  scripts: src/main/perl/bin
 extra-files:
   - ChangeLog
   - examples: src/examples
