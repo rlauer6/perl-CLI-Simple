@@ -38,7 +38,6 @@ CLI::Simple - a framework for creating option driven Perl scripts
     )->run;
 
     1;
-     
 
 # DESCRIPTION
 
@@ -46,6 +45,8 @@ Tired of writing the same 'ol boilerplate code for command line
 scripts? Want a standard, simple way to create a Perl script?
 `CLI::Simple` makes it easy to create scripts that take _options_,
 _commands_ and _arguments_.
+
+This documentation describes version 0.0.7.
 
 ## Features
 
@@ -144,7 +145,7 @@ Using `CLI::Simple` to implement this script looks like this...
 
 - option\_specs (required)
 
-    An array reference of option specfications.  These are the same as
+    An array reference of option specifications.  These are the same as
     those passed to `Getopt::Long`.
 
 Instantiates a new `CLI::Simple` object.
@@ -215,8 +216,8 @@ In your command subroutines you can then access these options using gettters.
     $cli->get_log_level;
 
 Note that options that use dashes in the name will be automatically
-converted to snake case names. Some folks find it easier to use '-'
-rather than '\_' for option names.
+converted to snake case names. (Some folks find it easier to use '-'
+rather than '\_' for option names.)
 
 # COMMAND ARGUMENTS
 
@@ -233,14 +234,15 @@ easier to read and understand.
       ...
     }
 
-If pass an empty list then all of the command arguments will be returned.
+If you pass an empty list then all of the command arguments will be
+returned.
 
     my ($phone_number, $message) = $self->get_args;
 
 # SETTING DEFAULT VALUES FOR OPTIONS
 
 To set default values for your option, pass a hash reference as the
-`default_options` argument to the constructur.
+`default_options` argument to the constructor.
 
     my $cli = CLI::Simple->new(
       default_option => { foo => 'bar' },
@@ -250,7 +252,7 @@ To set default values for your option, pass a hash reference as the
 
 # ADDING ADDITIONAL SETTERS & GETTERS
 
-As note all command line options are available using getters of the
+As noted all command line options are available using getters of the
 same name preceded by `get_`.
 
 If you want to create additional setter and getters, pass an array of
@@ -265,8 +267,8 @@ variable names as the `extra_options` argument to the constructor.
 
 # ADDING USAGE TO YOUR SCRIPTS
 
-To add a usage or help capability to your scripts, just add some pod
-at the bottom of your script with a USAGE section (head1).
+To add usage or help capability to your scripts, just add some pod
+at the bottom of your script in a USAGE section (head1).
 
     =head1 USAGE
 
@@ -278,16 +280,16 @@ at the bottom of your script with a USAGE section (head1).
      ....
 
 If the command specified is 'help' or if you have added an optional
-`--help` option, users can access the usage section from the command line.
+`--help` option, users can then access the usage section from the command line.
 
-    perl myscript.pm -h
-    perl myscript.pm help
+    perl myscript.pm -h perl myscript.pm help
 
 # LOGGING
 
 `CLI::Simple` will enable you to automatically add logging to your
-script using a [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) logger. You can pass in a `Log4perl` configuration
-string or let the class instantiate `Log::Log4perl` in easy mode.
+script using a [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) logger. You can pass in a `Log4perl`
+configuration string or let the class instantiate `Log::Log4perl` in
+easy mode.
 
 Do this at the top of your class:
 
@@ -302,7 +304,7 @@ to retrieve the logger.
 - How do I execute some startup code before my command runs?
 
     The `new` constructor will execute an `init()` method prior to
-    returning. Implement your own ["init"](#init) function which has all of the
+    returning. Implement your own ["init"](#init) function which will have of the
     commands and arguments available to it at that time.
 
 - Do I need to implement commands?
@@ -382,21 +384,21 @@ to retrieve the logger.
 
     The script (`modulino`) is include in this distribution.
 
-    You can also us the include `create-modulino.pl` script to create a
+    You can also use the included `create-modulino.pl` script to create a
     symbolic link to your class that will be executed as if it is a Perl
     script if you've implemented the modulino pattern described above.
 
         sudo create-modulino.pl Foo::Bar foo-bar
 
-    If you do not provide and alias name as the second argument the script
+    If you do not provide an alias name as the second argument the script
     will create a copy of the `modulino` script as a normalized name of
     your module but will not create a symbolic link.
 
     The script essentially executes the recipe below.
 
-    - 1. Copy the `modulino` script using a name that convert the
+    - 1. Copy the `modulino` script using a name that converts the
     first letter of the class to lower case and any CamelCased words
-    inside the class name to lower case with all words snake caseds.
+    inside the class name to lower case with all words snake cased.
     Example: `Module::ScanDeps::FindRequires` becomes:
     `module_scanDeps_findRequires`.
 
@@ -423,11 +425,3 @@ modified under the same terms as Perl itself.
 # AUTHOR
 
 Rob Lauer - <rlauer6@comcast.net>
-
-# POD ERRORS
-
-Hey! **The above document had some coding errors, which are explained below:**
-
-- Around line 675:
-
-    You forgot a '=back' before '=head1'
