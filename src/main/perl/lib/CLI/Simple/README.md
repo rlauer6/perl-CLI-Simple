@@ -24,14 +24,14 @@ CLI::Simple - a framework for creating option driven Perl scripts
     sub list { 
       my ($self) = @_
 
-      # retrieve a command argument with name
-      my $file = $self->get_arg(qw(file));
+      # retrieve a command argument
+      my ($file) = $self->get_args();
       ...
     }
 
     sub main {
      CLI::Simple->new(
-      option_specs    => [ qw( help formt=s ) ],
+      option_specs    => [ qw( help format=s ) ],
       default_options => { format => 'json' }, # set some defaults
       extra_options   => [ qw( content ) ], # non-option, setter/getter
       commands        => { execute => \&execute, list => \&list,  }
@@ -46,7 +46,7 @@ scripts? Want a standard, simple way to create a Perl script?
 `CLI::Simple` makes it easy to create scripts that take _options_,
 _commands_ and _arguments_.
 
-This documentation describes version 0.0.7.
+This documentation describes version 0.0.8.
 
 ## Features
 
@@ -160,17 +160,23 @@ the script return code.
 
 ## get\_args
 
-    get_args(var-name, ... );
+Return the arguments that follow the command.
 
-In scalar context returns a reference to the hash of arguments. In
-array context will return a list of key/value pairs.
+    get_args(var-name, ... )
+    get_args()
+
+With arguments, in scalar context returns a reference to the hash of
+arguments by assigning each positional argument to a key value.  In
+array context returns a list of key/value pairs.
+
+With no arguments returns the array of command arguments.
 
 Example:
 
     sub send_message {
       my ($self) = @_;
 
-      my (%args) = $self->get_args(qw(message email));
+      my %args = $self->get_args(qw(message email));
       
       _send_message($arg{message}, $args{email});
 
@@ -382,7 +388,7 @@ to retrieve the logger.
     To make it easy to use such a module, I've created a `bash` script that
     calls the module with the arguments passed on the command line.
 
-    The script (`modulino`) is include in this distribution.
+    The script (`modulino`) is included in this distribution.
 
     You can also use the included `create-modulino.pl` script to create a
     symbolic link to your class that will be executed as if it is a Perl
@@ -424,4 +430,4 @@ modified under the same terms as Perl itself.
 
 # AUTHOR
 
-Rob Lauer - <rlauer6@comcast.net>
+Rob Lauer - <bigfoot@cpan.org>
