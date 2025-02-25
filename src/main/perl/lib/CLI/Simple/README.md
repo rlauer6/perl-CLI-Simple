@@ -46,7 +46,7 @@ scripts? Want a standard, simple way to create a Perl script?
 `CLI::Simple` makes it easy to create scripts that take _options_,
 _commands_ and _arguments_.
 
-This documentation describes version 0.0.8.
+This documentation describes version 0.0.9.
 
 ## Features
 
@@ -149,6 +149,10 @@ Using `CLI::Simple` to implement this script looks like this...
     those passed to `Getopt::Long`.
 
 Instantiates a new `CLI::Simple` object.
+
+## command
+
+Returns the command presented on the command line.
 
 ## run
 
@@ -286,9 +290,38 @@ at the bottom of your script in a USAGE section (head1).
      ....
 
 If the command specified is 'help' or if you have added an optional
-`--help` option, users can then access the usage section from the command line.
+`--help` option, users can access the usage section.
 
-    perl myscript.pm -h perl myscript.pm help
+    perl myscript.pm -h
+
+    perl myscript.pm help
+
+## Custom `help() Method`
+
+If you don't make this module your parent class and your module
+already has POD that is what you want displayed by `CLI::Simple`'s
+help facility, create your own custom help method and set that as one
+of your commands.
+
+    ...
+    commands => {
+      help => \&help,
+      ...
+    }
+
+This situation occurs when for example, you have a class that is
+typically used by other scripts or modules but also has the capability
+of running the modulino pattern. Run as a modulino the script's usage
+notes might differ from those in the module itself.
+
+    caller or __PACKAGE__->main()
+
+Without creating your own help function, `CLI::Simple`'s help
+facility will output the usage notes in your POD. That may or may not
+have been what you wanted, hence the ability to override that behavior
+by providing your own `help()` method that will be called when that
+module is run as a script and either `--help` option or help command is
+used.
 
 # LOGGING
 
@@ -431,3 +464,11 @@ modified under the same terms as Perl itself.
 # AUTHOR
 
 Rob Lauer - <bigfoot@cpan.org>
+
+# POD ERRORS
+
+Hey! **The above document had some coding errors, which are explained below:**
+
+- Around line 574:
+
+    Unterminated C<...> sequence
