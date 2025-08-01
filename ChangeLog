@@ -1,3 +1,22 @@
+Fri Aug  1 13:23:16 2025  Rob Lauer  <rlauer6@comcast.net>
+
+	[1.0.0]:
+	* version.mk: new
+	* Makefile.am: add above
+	* VERSION: bump major
+	* src/main/perl/lib/CLI/Simple.pm.in
+	(program): new
+	(commands): new
+	(run)
+	- support custom per command log levels
+	- refactoring
+	(init_logger): likewise
+	(use_log4perl)
+	- _get_log4perlconf -> get_log4perl_conf
+	- _get_log4perl_level -> get_lgo4perl_level
+	- + set_log4_perl()
+	* src/main/perl/lib/CLI/Simple/README.md: generated
+
 Tue Feb 25 10:00:08 2025  Rob Lauer  <rlauer6@comcast.net>
 
 	[0.0.9]:

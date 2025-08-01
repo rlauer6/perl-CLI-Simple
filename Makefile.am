@@ -52,3 +52,5 @@ EXTRA_DIST = \
     aclocal.m4
 
 DISTCHECK_CONFIGURE_FLAGS = --with-perlcritic-severity=3 --with-perl5libdir='\$(prefix)/share/perl5'
+
+include version.mk
