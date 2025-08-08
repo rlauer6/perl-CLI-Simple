@@ -1,60 +1,90 @@
 # NAME
 
-CLI::Simple::Constants
+CLI::Simple::Constants - Exportable constants for CLI::Simple-based applications
 
 # SYNOPSIS
 
-    use CLI::Simple::Constants qw(:booleans)
+    use CLI::Simple::Constants qw(:booleans :chars :log-levels);
+
+    return $SUCCESS if $flag;
+    print $PADDING, "=>", $SPACE, $EQUALS_SIGN, "\n" if $DEBUG;
 
 # DESCRIPTION
 
-This class provides a set of exportable constants commonly used in
-writing command line scripts.
+This module provides a collection of constants commonly needed when building
+command-line tools, especially those using `CLI::Simple`.
 
-# EXPORTABLE TAGS
+It includes:
 
-- booleans
+- Boolean values for use in control flow or shell-style success/failure
+- Character constants for formatting and CLI-friendly output
+- Predefined log level names for use with Log::Log4perl
+- Export tags for grouping constants by intent
+
+# EXPORT TAGS
+
+- :booleans
+
+    Semantic truthy and shell-style constants:
 
         $TRUE    => 1
         $FALSE   => 0
-        $SUCCESS => 0 # shell success
-        $FAILURE => 1 # shell failure
+        $SUCCESS => 0   # shell success
+        $FAILURE => 1   # shell failure
 
-- all
+- :chars
 
-    Import all constants.
+    Export commonly used single-character string constants:
 
-- chars
+        $AMPERSAND          => '&'
+        $COLON              => ':'
+        $COMMA              => ','
+        $DOUBLE_COLON       => '::'
+        $DASH               => '-'
+        $DOT                => '.'
+        $EMPTY              => ''
+        $EQUALS_SIGN        => '='
+        $OCTOTHORP          => '#'
+        $PERIOD             => '.'
+        $QUESTION_MARK      => '?'
+        $SLASH              => '/'
+        $SPACE              => ' '
+        $TEMPLATE_DELIMITER => '@'
+        $UNDERSCORE         => '_'
 
-        $AMPERSAND          => q{&};
-        $COLON              => q{:};
-        $COMMA              => q{,};
-        $DOUBLE_COLON       => q{::};
-        $DASH               => q{-};
-        $DOT                => q{.};
-        $EMPTY              => q{};
-        $EQUALS_SIGN        => q{=};
-        $OCTOTHORP          => q{#};
-        $PERIOD             => q{.};
-        $QUESTION_MARK      => q{?};
-        $SLASH              => q{/};
-        $SPACE              => q{ };
-        $TEMPLATE_DELIMITER => q{@};
-        $UNDERSCORE         => q{_};
+    Note: `$DOT` and `$PERIOD` are synonyms provided for semantic clarity.
 
-- log-levels
+- :strings
 
-    Names for Log::Log4perl log level
+    String constants used for formatting:
+
+        $PADDING => '    '   # 4 spaces, commonly used for indentation
+
+- :log-levels
+
+    Provides a hash mapping symbolic log level names to [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) constants:
 
         %LOG_LEVELS => (
-           debug => $DEBUG,
-           trace => $TRACE,
-           warn  => $WARN,
-           error => $ERROR,
-           fatal => $FATAL,
-           info  => $INFO,
-        );
+          debug => $DEBUG,
+          trace => $TRACE,
+          info  => $INFO,
+          warn  => $WARN,
+          error => $ERROR,
+          fatal => $FATAL,
+        )
+
+- :all
+
+    Exports all constants from the above tags.
+
+# SEE ALSO
+
+[Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl), [CLI::Simple](https://metacpan.org/pod/CLI%3A%3ASimple)
 
 # AUTHOR
 
-Rob Lauer - rlauer6@comcast.net
+Rob Lauer
+
+# LICENSE
+
+Same terms as Perl itself.

@@ -1,6 +1,6 @@
 # NAME
 
-CLI::Simple - a framework for creating option driven Perl scripts
+CLI::Simple - a minimalist object oriented base class for CLI applications
 
 # SYNOPSIS
 
@@ -46,13 +46,19 @@ scripts? Want a standard, simple way to create a Perl script?
 `CLI::Simple` makes it easy to create scripts that take _options_,
 _commands_ and _arguments_.
 
-This documentation refers to version 1.0.0.
+For common constant values (like `$TRUE`, `$DASH`, or `$SUCCESS`), see
+[CLI::Simple::Constants](https://metacpan.org/pod/CLI%3A%3ASimple%3A%3AConstants), which pairs naturally with this module.
+
+# VERSION
+
+This documentation refers to version 1.0.1.
 
 ## Features
 
 - accept command line arguments ala [GetOptions::Long](https://metacpan.org/pod/GetOptions%3A%3ALong)
 - supports commands and command arguments
 - automatically add a logger
+- global or custom log levels per command
 - easily add usage notes
 - automatically create setter/getters for your script
 
@@ -105,6 +111,64 @@ Using `CLI::Simple` to implement this script looks like this...
 
     1;
 
+# PHILOSOPHY AND DESIGN PRINCIPLES
+
+CLI::Simple is intentionally minimalist. It provides just enough
+structure to build command-line tools with subcommands, option
+parsing, and help handling -- but without enforcing any particular
+framework or lifecycle.
+
+## Not a Framework
+
+This module is not App::Cmd, MooseX::Getopt, or a full application toolkit.
+Instead, it offers:
+
+- An object-oriented base class with a clean `run()` dispatcher
+- Command-line parsing via `Getopt::Long`
+- Built-in logging via `Log::Log4perl`
+- Subclass hooks like `init()` for setup and validation
+
+The philosophy is: provide just enough infrastructure, then get out of your way.
+
+## Validation, Defaults, and Configuration
+
+CLI::Simple does not impose a validation model. You may:
+
+- Use `Getopt::Long` features (e.g., type constraints, default values)
+- Write your own validation logic in `init()`
+- Throw exceptions, emit usage, or exit early at any point
+
+The lifecycle is explicit and under your control. You decide how much structure
+you want to add on top of it.
+
+## When to Use
+
+CLI::Simple is ideal for:
+
+- Internal tools and admin scripts
+- Bootstrapped CLIs where you don't want a framework
+- Users who want to subclass a clean, minimal interface
+
+For more advanced features - like command trees, plugin support, or interactive
+CLI handling - consider heavier modules like [App::Cmd](https://metacpan.org/pod/App%3A%3ACmd), [CLI::Framework](https://metacpan.org/pod/CLI%3A%3AFramework), or
+[MooX::Options](https://metacpan.org/pod/MooX%3A%3AOptions).
+
+# CONSTANTS
+
+`CLI::Simple` does not define its own constants directly, but it is often used
+in conjunction with [CLI::Simple::Constants](https://metacpan.org/pod/CLI%3A%3ASimple%3A%3AConstants), which provides a collection of
+exportable values commonly needed in command-line scripts.
+
+These include:
+
+- Boolean flags like `$TRUE`, `$FALSE`, `$SUCCESS`, and `$FAILURE`
+- Common character tokens such as `$COLON`, `$DASH`, `$EQUALS_SIGN`, etc.
+- Log level names compatible with [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)
+
+To use them in your script:
+
+    use CLI::Simple::Constants qw(:all);
+
 # METHODS AND SUBROUTINES
 
 ## new
@@ -121,6 +185,21 @@ options. The remaining elements of `@ARGV` are treated as the command
 name and its arguments._
 
 `args` is a hash or hash reference containing the following keys:
+
+- abbreviations
+
+    A boolean that determines whether abbreviated command names are allowed.
+
+    When true, the `run()` method will treat the provided command as a prefix
+    and compare it to the keys in the command hash. If exactly one match is
+    found, it will be used. If more than one match is found, or if no match is
+    found, `run()` will throw an exception.
+
+    This allows for convenient shorthand like:
+
+        mytool disable-sched    # expands to 'disable-scheduled-task'
+
+    default: false
 
 - commands (required)
 
@@ -280,6 +359,31 @@ returns all remaining arguments as a list:
 _Note: When called with names, `get_args` returns a hash in list
 context and a hash reference in scalar context._
 
+# CUSTOM ERROR HANDLER
+
+By default `CLI::Simple` will exit if `GetOptions` returns a false
+value indicating an error parsing your options. You can prevent that
+behavior in one of two ways.
+
+- Set $CLI::Simple:EXIT\_ON\_ERROR to a false value to continue processing.
+- Set an error handler in the constructor.
+
+        my $cli = CLI::Simple->new(
+          commands        => \%commands,
+          default_options => \%default_options,
+          extra_options   => \@extra_options,
+          option_specs    => \@option_specs,
+          abbreviations   => $TRUE,
+          error_handler   => sub {
+            print {*STDERR} shift;
+            return $FALSE;
+          },
+        );
+
+    The error handler is passed the error message output by
+    `GetOptions`. Return a true value to continue processing or a false
+    value to exit.
+
 # SETTING DEFAULT VALUES FOR OPTIONS
 
 To assign default values to your options, pass a hash reference as the
@@ -396,7 +500,7 @@ To assign a custom log level to a command, use an array reference as
 the value for that command in the commands hash passed to the
 constructor.
 
-The array reference must contain exactly two elements:
+The array reference should contain at least two elements:
 
 - A code reference to the command subroutine
 - A log level string: one of 'trace', 'debug', 'info', 'warn',
@@ -413,6 +517,8 @@ Example:
         list    => [ \&list, 'error' ],
       }
     )->run;
+
+- TIP: add other elements to the array for your command to process
 
 # FAQ
 
@@ -481,8 +587,21 @@ under the same terms as Perl itself.  See
 
 # SEE ALSO
 
-[Getopt::Long](https://metacpan.org/pod/Getopt%3A%3ALong), [CLI::Simple::Utils](https://metacpan.org/pod/CLI%3A%3ASimple%3A%3AUtils), [Pod::Usage](https://metacpan.org/pod/Pod%3A%3AUsage)
+[Getopt::Long](https://metacpan.org/pod/Getopt%3A%3ALong), [CLI::Simple::Utils](https://metacpan.org/pod/CLI%3A%3ASimple%3A%3AUtils), [Pod::Usage](https://metacpan.org/pod/Pod%3A%3AUsage), [App::Cmd](https://metacpan.org/pod/App%3A%3ACmd),
+[CLI::Framework](https://metacpan.org/pod/CLI%3A%3AFramework), [MooX::Options](https://metacpan.org/pod/MooX%3A%3AOptions)
 
 # AUTHOR
 
 Rob Lauer - <bigfoot@cpan.org>
+
+# POD ERRORS
+
+Hey! **The above document had some coding errors, which are explained below:**
+
+- Around line 956:
+
+    '=item' outside of any '=over'
+
+- Around line 958:
+
+    You forgot a '=back' before '=head1'

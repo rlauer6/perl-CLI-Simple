@@ -1,3 +1,29 @@
+Fri Aug  8 08:15:06 2025  Rob Lauer  <rlauer6@comcast.net>
+
+	[1.0.1]:
+	* VERSION:bump
+	* .gitignore: cpan/*.tmp
+	* requires: new
+	* test-requires: new
+	* src/main/perl/lib/CLI/Simple.pm.in
+	- package variables GETOPT_EXIT_ON_ERROR, GETOPT_STATUS, GETOPT_ERROR_MESSAGE
+	- + abbreviations, error_handler
+	(new)
+	- trap GetOptions error
+	- allow any word character in options
+	- support array ref command spec
+	- validate command (use abbreviations)
+	(init_logger)
+	- support command specific log levels
+	(validate_command): new
+	(run)
+	- don't set log level here, set in init_logger
+	* src/main/perl/lib/CLI/Simple/Constants.pm.in
+	- pod updates
+	* src/main/perl/lib/CLI/Simple/Constants/README.md
+	* src/main/perl/lib/CLI/Simple/README.md
+
+
 Fri Aug  1 13:23:16 2025  Rob Lauer  <rlauer6@comcast.net>
 
 	[1.0.0]:

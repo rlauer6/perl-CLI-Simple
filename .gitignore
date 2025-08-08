@@ -57,3 +57,4 @@ autotools/prove.sh
 autotools/test-driver
 install-from-cpan
 **/*.log
+cpan/*.tmp

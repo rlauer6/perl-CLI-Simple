@@ -18,7 +18,10 @@ use Scalar::Util qw(reftype);
 use Log::Log4perl;
 use Pod::Usage;
 
-our $VERSION = '@PACKAGE_VERSION@';
+our $VERSION              = '@PACKAGE_VERSION@';
+our $GETOPT_EXIT_ON_ERROR = $TRUE;
+our $GETOPT_STATUS;
+our $GETOPT_ERROR_MESSAGE;
 
 use parent qw(Class::Accessor::Fast Exporter);
 
@@ -29,6 +32,7 @@ __PACKAGE__->mk_accessors(
     _command_args
     _commands
     _program
+    _abbreviations
   )
 );
 
@@ -74,8 +78,8 @@ sub new {
 
   my %args = ref $params[0] ? %{ $params[0] } : @params;
 
-  my ( $default_options, $option_specs, $commands, $extra_options )
-    = @args{qw(default_options option_specs commands extra_options)};
+  my ( $default_options, $option_specs, $commands, $extra_options, $abbreviations, $error_handler )
+    = @args{qw(default_options option_specs commands extra_options abbreviations error_handler)};
 
   no strict 'refs';  ## no critic
 
@@ -107,14 +111,19 @@ sub new {
     push @{$option_specs}, 'log-level=s';
   }
 
-  GetOptions( $options, @{$option_specs} );
+  $GETOPT_STATUS = sub {
+    local $SIG{__WARN__} = sub { $GETOPT_ERROR_MESSAGE = shift; return; };
+
+    return GetOptions( $options, @{$option_specs} );
+    }
+    ->();
 
   normalize_options($options);
 
   my %cli_options;
 
   my @accessors
-    = ( @{ $extra_options || [] }, map { ( split /[^[:alpha:]\-_]/xsm )[0] } @{$option_specs} );
+    = ( @{ $extra_options || [] }, map { ( split /[^\w\-]/xsm )[0] } @{$option_specs} );
 
   foreach (@accessors) {
     s/\-/_/xsmg;
@@ -126,18 +135,19 @@ sub new {
     $cli_options{$_} = $options->{$_};
   }
 
+  if ( !$error_handler && !$GETOPT_STATUS ) {
+    print {*STDERR} $GETOPT_ERROR_MESSAGE;
+    exit $FAILURE
+      if $GETOPT_EXIT_ON_ERROR;
+  }
+  elsif ( !$GETOPT_STATUS ) {
+    exit $FAILURE
+      if !$error_handler->($GETOPT_ERROR_MESSAGE);
+  }
+
   my $self = $class->SUPER::new( \%cli_options );
 
   my $command = shift @ARGV // 'default';
-
-  if ( $command eq 'help' || ( $self->can('get_help') && $self->get_help ) ) {
-    # custom help function?
-    if ( $commands->{help} ) {
-      exit $commands->{help}->();
-    }
-
-    $self->usage;
-  }
 
   $self->set__command($command);
 
@@ -145,7 +155,27 @@ sub new {
 
   $self->set__commands($commands);
 
+  if ( $command eq 'help' || ( $self->can('get_help') && $self->get_help ) ) {
+    # custom help function?
+
+    my $help = $commands->{help};
+
+    exit $self->usage
+      if !$help;
+
+    if ( reftype($help) eq 'ARRAY' ) {
+      $help->[0]->($self);
+    }
+    else {
+      $help->($self);
+    }
+  }
+
+  $self->set__abbreviations( $abbreviations // $FALSE );
+
   $self->set__program("$RealBin/$RealScript");
+
+  $self->validate_command;
 
   $self->init_logger;
 
@@ -183,9 +213,11 @@ sub init_logger {
   my $command  = $self->command;
 
   return $self
-    if reftype( $commands->{$command} ) ne 'ARRAY';
+    if !$commands->{$command} || reftype( $commands->{$command} ) ne 'ARRAY';
 
   my ( $sub, $log_level ) = @{ $commands->{$command} };
+
+  $log_level = $self->get_log_level // $log_level;
 
   $self->get_logger->level( $LOG_LEVELS{$log_level} // $LOG_LEVELS{info} );
 
@@ -265,26 +297,56 @@ sub program {
 }
 
 ########################################################################
+sub validate_command {
+########################################################################
+  my ($self) = @_;
+
+  my $commands = $self->commands;
+  my $command  = $self->command;
+
+  if ( !defined $commands->{$command} ) {
+    my $abbreviation = $command;
+
+    if ( $self->get__abbreviations ) {
+
+      my @matches = grep {/^$abbreviation/xsm} keys %{$commands};
+
+      if ( @matches == 1 ) {
+        $command = $matches[0];  # Unique match — accept
+        $self->set__command($command);
+      }
+      elsif ( @matches > 1 ) {
+        croak "Ambiguous command '$abbreviation'; could match: @matches";
+      }
+      else {
+        croak "Unknown command: $abbreviation";
+      }
+    }
+    else {
+      croak "Unknown command: $command";
+    }
+  }
+
+  return $command;
+}
+
+########################################################################
 sub run {
 ########################################################################
   my ($self) = @_;
 
   my $program = $self->program;
-
   my $command = $self->command || 'default';
 
   my $commands = $self->commands;
   $commands->{default} //= \&usage;
 
-  croak 'unknown command: ' . $command
-    if !defined $commands->{$command};
+  my $handler = $commands->{$command};
 
-  return $commands->{$command}->($self)
-    if reftype( $commands->{$command} ) ne 'ARRAY';
+  return $handler->($self)
+    if ref $handler ne 'ARRAY';
 
-  my ( $sub, $log_level ) = @{ $commands->{$command} };
-
-  $self->get_logger->level( $LOG_LEVELS{$log_level} // $LOG_LEVELS{info} );
+  my ( $sub, $log_level ) = @{$handler};
 
   return $sub->($self);
 }
@@ -299,7 +361,7 @@ __END__
 
 =head1 NAME
 
-CLI::Simple - a framework for creating option driven Perl scripts
+CLI::Simple - a minimalist object oriented base class for CLI applications
 
 =head1 SYNOPSIS
 
@@ -345,6 +407,11 @@ scripts? Want a standard, simple way to create a Perl script?
 C<CLI::Simple> makes it easy to create scripts that take I<options>,
 I<commands> and I<arguments>.
 
+For common constant values (like C<$TRUE>, C<$DASH>, or C<$SUCCESS>), see
+L<CLI::Simple::Constants>, which pairs naturally with this module.
+
+=head1 VERSION
+
 This documentation refers to version @PACKAGE_VERSION@.
 
 =head2 Features
@@ -356,6 +423,8 @@ This documentation refers to version @PACKAGE_VERSION@.
 =item * supports commands and command arguments
 
 =item * automatically add a logger
+
+=item * global or custom log levels per command
 
 =item * easily add usage notes
 
@@ -412,6 +481,115 @@ Using C<CLI::Simple> to implement this script looks like this...
 
  1;
 
+=head1 PHILOSOPHY AND DESIGN PRINCIPLES
+
+CLI::Simple is intentionally minimalist. It provides just enough
+structure to build command-line tools with subcommands, option
+parsing, and help handling -- but without enforcing any particular
+framework or lifecycle.
+
+=head2 Not a Framework
+
+This module is not App::Cmd, MooseX::Getopt, or a full application toolkit.
+Instead, it offers:
+
+=over 4
+
+=item *
+
+An object-oriented base class with a clean C<run()> dispatcher
+
+=item *
+
+Command-line parsing via C<Getopt::Long>
+
+=item *
+
+Built-in logging via C<Log::Log4perl>
+
+=item *
+
+Subclass hooks like C<init()> for setup and validation
+
+=back
+
+The philosophy is: provide just enough infrastructure, then get out of your way.
+
+=head2 Validation, Defaults, and Configuration
+
+CLI::Simple does not impose a validation model. You may:
+
+=over 4
+
+=item *
+
+Use C<Getopt::Long> features (e.g., type constraints, default values)
+
+=item *
+
+Write your own validation logic in C<init()>
+
+=item *
+
+Throw exceptions, emit usage, or exit early at any point
+
+=back
+
+The lifecycle is explicit and under your control. You decide how much structure
+you want to add on top of it.
+
+=head2 When to Use
+
+CLI::Simple is ideal for:
+
+=over 4
+
+=item *
+
+Internal tools and admin scripts
+
+=item *
+
+Bootstrapped CLIs where you don't want a framework
+
+=item *
+
+Users who want to subclass a clean, minimal interface
+
+=back
+
+For more advanced features - like command trees, plugin support, or interactive
+CLI handling - consider heavier modules like L<App::Cmd>, L<CLI::Framework>, or
+L<MooX::Options>.
+
+=head1 CONSTANTS
+
+C<CLI::Simple> does not define its own constants directly, but it is often used
+in conjunction with L<CLI::Simple::Constants>, which provides a collection of
+exportable values commonly needed in command-line scripts.
+
+These include:
+
+=over 4
+
+=item *
+
+Boolean flags like C<$TRUE>, C<$FALSE>, C<$SUCCESS>, and C<$FAILURE>
+
+=item *
+
+Common character tokens such as C<$COLON>, C<$DASH>, C<$EQUALS_SIGN>, etc.
+
+=item *
+
+Log level names compatible with L<Log::Log4perl>
+
+=back
+
+To use them in your script:
+
+  use CLI::Simple::Constants qw(:all);
+
 =head1 METHODS AND SUBROUTINES
 
 =head2 new
@@ -430,6 +608,21 @@ name and its arguments.>
 C<args> is a hash or hash reference containing the following keys:
 
 =over 4
+
+=item * abbreviations
+
+A boolean that determines whether abbreviated command names are allowed.
+
+When true, the C<run()> method will treat the provided command as a prefix
+and compare it to the keys in the command hash. If exactly one match is
+found, it will be used. If more than one match is found, or if no match is
+found, C<run()> will throw an exception.
+
+This allows for convenient shorthand like:
+
+  mytool disable-sched    # expands to 'disable-scheduled-task'
+
+default: false
 
 =item * commands (required)
 
@@ -591,6 +784,36 @@ returns all remaining arguments as a list:
 I<Note: When called with names, C<get_args> returns a hash in list
 context and a hash reference in scalar context.>
 
+=head1 CUSTOM ERROR HANDLER
+
+By default C<CLI::Simple> will exit if C<GetOptions> returns a false
+value indicating an error parsing your options. You can prevent that
+behavior in one of two ways.
+
+=over 4
+
+=item * Set $CLI::Simple:EXIT_ON_ERROR to a false value to continue processing.
+
+=item * Set an error handler in the constructor.
+
+  my $cli = CLI::Simple->new(
+    commands        => \%commands,
+    default_options => \%default_options,
+    extra_options   => \@extra_options,
+    option_specs    => \@option_specs,
+    abbreviations   => $TRUE,
+    error_handler   => sub {
+      print {*STDERR} shift;
+      return $FALSE;
+    },
+  );
+
+The error handler is passed the error message output by
+C<GetOptions>. Return a true value to continue processing or a false
+value to exit.
+
+=back
+
 =head1 SETTING DEFAULT VALUES FOR OPTIONS
 
 To assign default values to your options, pass a hash reference as the
@@ -707,7 +930,7 @@ To assign a custom log level to a command, use an array reference as
 the value for that command in the commands hash passed to the
 constructor.
 
-The array reference must contain exactly two elements:
+The array reference should contain at least two elements:
 
 =over 4
 
@@ -729,6 +952,8 @@ Example:
       list    => [ \&list, 'error' ],
     }
   )->run;
+
+=item TIP: add other elements to the array for your command to process
 
 =head1 FAQ
 
@@ -805,7 +1030,8 @@ L<https://dev.perl.org/licenses/> for more information.
 
 =head1 SEE ALSO
 
-L<Getopt::Long>, L<CLI::Simple::Utils>, L<Pod::Usage>
+L<Getopt::Long>, L<CLI::Simple::Utils>, L<Pod::Usage>, L<App::Cmd>,
+L<CLI::Framework>, L<MooX::Options>
 
 =head1 AUTHOR
 
