@@ -203,7 +203,23 @@ sub new {
 
   my $self = $class->SUPER::new( \%cli_options );
 
-  my $command = shift @ARGV // 'default';
+  if ( scalar keys %{$commands} == 1 ) {
+    my ($command) = keys %{$commands};
+
+    if ( @ARGV && $ARGV[0] ne $command ) {
+      unshift @ARGV, $command;
+    }
+    elsif ( !@ARGV ) {
+      unshift @ARGV, $command;
+    }
+  }
+
+  my $command = shift @ARGV;
+
+  if ( !$command ) {
+    $command = 'default';
+    $commands->{default} //= \&usage;
+  }
 
   $self->set__command($command);
 
@@ -220,7 +236,7 @@ sub new {
       $self->usage;
     }
 
-    if ( reftype($help) eq 'ARRAY' ) {
+    if ( ref $help && reftype($help) eq 'ARRAY' ) {
       $help->[0]->($self);
     }
     else {
@@ -345,7 +361,7 @@ sub usage {
 ########################################################################
   my ($self) = @_;
 
-  return pod2usage(
+  pod2usage(
     -noperldoc => 1,
     -exitval   => 'NOEXIT',
     -input     => $self->get__program
@@ -425,10 +441,9 @@ sub run {
   my ($self) = @_;
 
   my $program = $self->program;
-  my $command = $self->command || 'default';
+  my $command = $self->command;
 
   my $commands = $self->commands;
-  $commands->{default} //= \&usage;
 
   my $handler = $commands->{$command};
 
@@ -520,6 +535,8 @@ This documentation refers to version @PACKAGE_VERSION@.
 
 =item * automatically create setter/getters for your script
 
+=item * low dependency profile
+
 =back
 
 Command line scripts often take I<options>, sometimes a I<command> and
@@ -573,15 +590,15 @@ Using C<CLI::Simple> to implement this script looks like this...
 
 =head1 PHILOSOPHY AND DESIGN PRINCIPLES
 
-CLI::Simple is intentionally minimalist. It provides just enough
+C<CLI::Simple> is intentionally minimalist. It provides just enough
 structure to build command-line tools with subcommands, option
 parsing, and help handling -- but without enforcing any particular
 framework or lifecycle.
 
 =head2 Not a Framework
 
-This module is not App::Cmd, MooseX::Getopt, or a full application toolkit.
-Instead, it offers:
+This module is not L<App::Cmd>, L<MooseX::Getopt>, or a full
+application toolkit.  Instead, it offers:
 
 =over 4
 
@@ -607,7 +624,7 @@ The philosophy is: provide just enough infrastructure, then get out of your way.
 
 =head2 Validation, Defaults, and Configuration
 
-CLI::Simple does not impose a validation model. You may:
+C<CLI::Simple> does not impose a validation model. You may:
 
 =over 4
 
@@ -731,38 +748,49 @@ A hash mapping command names to either a subroutine reference or an
 array reference.
 
 If an array reference is used, the first element must be a subroutine
-reference and the second should be a valid log level. (See L</Per
-Command Log Levels>.)
+reference and the second should be a valid log level. (See
+L</Per Command Log Levels>.)
 
 Example:
 
   {
-    send           => \&send_message,
-    receive        => \&receive_message,
-    list_messages  => [ \&list_messages, 'error' ],
+    send          => \&send_message,
+    receive       => \&receive_message,
+    list_messages => [ \&list_messages, 'error' ],
   }
 
-If your script does not use command names, set a C<default> key to the
-subroutine or method to run.
+If your script does not use command names, you may set a C<default> key
+to the subroutine or method to run:
 
   { default => \&main }
 
+If no default is provided, the default command becomes C<usage()>.
+
+If your C<commands> hash contains only a single command, that command
+will be run automatically when no command name is given on the command
+line. This allows you to treat the program like a single-command tool,
+where arguments can be passed directly without explicitly naming the
+command.
+
 =item * default_options (optional)
 
-A hash reference of default values for your options.
+A hash reference providing default values for options. These values
+apply if the corresponding option is not given on the command line.
 
-=item * extra_options
+=item * extra_options (optional)
 
-An arrayref of names for additional accessors you'd like to create,
-even if they're not part of the option spec.
+An array reference of names for additional accessors you want to create,
+even if they are not part of C<option_specs>.
 
 Example:
 
   extra_options => [ qw(foo bar baz) ]
 
-=item * option_specs (required)
+=item * option_specs (optional)
 
-An array reference of option specifications, as accepted by L<Getopt::Long>.
+An array reference of option specifications, as accepted by
+L<Getopt::Long>. These define the command-line options your program
+recognizes.
 
 =back
 
@@ -786,33 +814,40 @@ shell as the script return code.
 
 Return the arguments that follow the command.
 
- get_args(var-name, ... )
- get_args()
+  get_args(NAME, ... )     # with names
+  get_args()               # raw positional args
 
-With arguments, in scalar context returns a reference to the hash of
-arguments by assigning each positional argument to a key value.  In
-array context returns a list of key/value pairs.
+With names:
 
-With no arguments returns the array of command arguments.
+- In scalar context, returns a hash reference mapping each NAME to the
+  corresponding positional argument.
+- In list context, returns a flat list of C<(name => value)> pairs.
+
+With no names:
+
+- Returns the command's positional arguments (array in list context;
+  array reference in scalar context).
 
 Example:
 
- sub send_message {
-   my ($self) = @_;
+  sub send_message {
+    my ($self) = @_;
 
-   my %args = $self->get_args(qw(message email));
-   
-   _send_message($arg{message}, $args{email});
+    my %args = $self->get_args(qw(message email));
 
-  ...
+    _send_message($args{message}, $args{email});
+  }
 
-Note that when calling C<get_args> with a list of names the values for
-each named variable are assigned in the order they appear on the
-command line. In the example above C<message> is assigned the first
-command argument, C<email> is assigned the second argument. If you
-want just argument 1 and 3 for example you could do this:
+When you call C<get_args> with a list of names, values are assigned in
+order: the first name gets the first argument, the second name gets the
+second argument, and so on. If you only want specific positions, you may
+use C<undef> as a placeholder:
 
- my %args = $self->get_args('message', undef , 'cc');
+  my %args = $self->get_args('message', undef, 'cc');  # args 1 and 3
+
+If there are fewer positional arguments than names, the remaining names
+are set to C<undef>. Extra positional arguments (beyond the provided
+names) are ignored.
 
 =head2 init
 
@@ -895,15 +930,18 @@ context and a hash reference in scalar context.>
 
 =head1 CUSTOM ERROR HANDLER
 
-By default C<CLI::Simple> will exit if C<GetOptions> returns a false
-value indicating an error parsing your options. You can prevent that
-behavior in one of two ways.
+By default, C<CLI::Simple> will exit if C<GetOptions> returns a false
+value, indicating an error while parsing options. You can override this
+behavior in one of two ways:
 
 =over 4
 
-=item * Set $CLI::Simple:EXIT_ON_ERROR to a false value to continue processing.
+=item * Set C<$CLI::Simple::EXIT_ON_ERROR> to a false value.
 
-=item * Set an error handler in the constructor.
+This disables automatic exiting and lets your program decide what to do
+after an option-parsing failure.
+
+=item * Provide an C<error_handler> callback in the constructor.
 
   my $cli = CLI::Simple->new(
     commands        => \%commands,
@@ -912,14 +950,15 @@ behavior in one of two ways.
     option_specs    => \@option_specs,
     abbreviations   => $TRUE,
     error_handler   => sub {
-      print {*STDERR} shift;
-      return $FALSE;
+      my ($msg) = @_;
+      print {*STDERR} $msg;
+      return $TRUE;   # continue processing
     },
   );
 
-The error handler is passed the error message output by
-C<GetOptions>. Return a true value to continue processing or a false
-value to exit.
+The error handler is called with the error message from C<GetOptions>.
+It must return a boolean: a true value allows processing to continue,
+while a false value causes C<CLI::Simple> to exit immediately.
 
 =back
 
@@ -1062,7 +1101,7 @@ Example:
     }
   )->run;
 
-=item TIP: add other elements to the array for your command to process
+I<TIP: add other elements to the array for your command to process.>
 
 =head1 FAQ
 
@@ -1260,26 +1299,24 @@ can distinguish between normal completion and error conditions.
 
 =over 4
 
-=item * 0
+=item * '0'
 
 Successful completion of a command (C<SUCCESS>).
 
-=item * 1
+=item * '1'
 
 General usage error, such as C<--help> display via C<pod2usage>, or an
 invalid command line (C<FAILURE>).
 
-=item * 2
+=item * '2'
 
 Option parsing failure, such as an unrecognized option or invalid
 argument (also reported as C<FAILURE>).
 
 =item * Any other code
 
-=item * Any other code
-
 If a user-supplied command callback explicitly calls C<exit()> or
-returns a numeric value other than 0–2, that code is passed through
+returns a numeric value other than 0 - 2, that code is passed through
 unchanged to the shell. This allows application-specific exit codes.
 
 =back

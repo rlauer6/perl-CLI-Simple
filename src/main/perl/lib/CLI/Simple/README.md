@@ -52,7 +52,7 @@ For common constant values (like `$TRUE`, `$DASH`, or `$SUCCESS`), see
 
 # VERSION
 
-This documentation refers to version 1.0.2.
+This documentation refers to version 1.0.3.
 
 ## Features
 
@@ -62,6 +62,7 @@ This documentation refers to version 1.0.2.
 - global or custom log levels per command
 - easily add usage notes
 - automatically create setter/getters for your script
+- low dependency profile
 
 Command line scripts often take _options_, sometimes a _command_ and
 perhaps _arguments_ to those commands.  For example, consider the
@@ -114,15 +115,15 @@ Using `CLI::Simple` to implement this script looks like this...
 
 # PHILOSOPHY AND DESIGN PRINCIPLES
 
-CLI::Simple is intentionally minimalist. It provides just enough
+`CLI::Simple` is intentionally minimalist. It provides just enough
 structure to build command-line tools with subcommands, option
 parsing, and help handling -- but without enforcing any particular
 framework or lifecycle.
 
 ## Not a Framework
 
-This module is not App::Cmd, MooseX::Getopt, or a full application toolkit.
-Instead, it offers:
+This module is not [App::Cmd](https://metacpan.org/pod/App%3A%3ACmd), [MooseX::Getopt](https://metacpan.org/pod/MooseX%3A%3AGetopt), or a full
+application toolkit.  Instead, it offers:
 
 - An object-oriented base class with a clean `run()` dispatcher
 - Command-line parsing via `Getopt::Long`
@@ -133,7 +134,7 @@ The philosophy is: provide just enough infrastructure, then get out of your way.
 
 ## Validation, Defaults, and Configuration
 
-CLI::Simple does not impose a validation model. You may:
+`CLI::Simple` does not impose a validation model. You may:
 
 - Use `Getopt::Long` features (e.g., type constraints, default values)
 - Write your own validation logic in `init()`
@@ -214,38 +215,49 @@ name and its arguments._
     array reference.
 
     If an array reference is used, the first element must be a subroutine
-    reference and the second should be a valid log level. (See ["Per
-    Command Log Levels"](#per-command-log-levels).)
+    reference and the second should be a valid log level. (See
+    ["Per Command Log Levels"](#per-command-log-levels).)
 
     Example:
 
         {
-          send           => \&send_message,
-          receive        => \&receive_message,
-          list_messages  => [ \&list_messages, 'error' ],
+          send          => \&send_message,
+          receive       => \&receive_message,
+          list_messages => [ \&list_messages, 'error' ],
         }
 
-    If your script does not use command names, set a `default` key to the
-    subroutine or method to run.
+    If your script does not use command names, you may set a `default` key
+    to the subroutine or method to run:
 
         { default => \&main }
 
+    If no default is provided, the default command becomes `usage()`.
+
+    If your `commands` hash contains only a single command, that command
+    will be run automatically when no command name is given on the command
+    line. This allows you to treat the program like a single-command tool,
+    where arguments can be passed directly without explicitly naming the
+    command.
+
 - default\_options (optional)
 
-    A hash reference of default values for your options.
+    A hash reference providing default values for options. These values
+    apply if the corresponding option is not given on the command line.
 
-- extra\_options
+- extra\_options (optional)
 
-    An arrayref of names for additional accessors you'd like to create,
-    even if they're not part of the option spec.
+    An array reference of names for additional accessors you want to create,
+    even if they are not part of `option_specs`.
 
     Example:
 
         extra_options => [ qw(foo bar baz) ]
 
-- option\_specs (required)
+- option\_specs (optional)
 
-    An array reference of option specifications, as accepted by [Getopt::Long](https://metacpan.org/pod/Getopt%3A%3ALong).
+    An array reference of option specifications, as accepted by
+    [Getopt::Long](https://metacpan.org/pod/Getopt%3A%3ALong). These define the command-line options your program
+    recognizes.
 
 ## command
 
@@ -267,14 +279,19 @@ shell as the script return code.
 
 Return the arguments that follow the command.
 
-    get_args(var-name, ... )
-    get_args()
+    get_args(NAME, ... )     # with names
+    get_args()               # raw positional args
 
-With arguments, in scalar context returns a reference to the hash of
-arguments by assigning each positional argument to a key value.  In
-array context returns a list of key/value pairs.
+With names:
 
-With no arguments returns the array of command arguments.
+\- In scalar context, returns a hash reference mapping each NAME to the
+  corresponding positional argument.
+\- In list context, returns a flat list of `(name =` value)> pairs.
+
+With no names:
+
+\- Returns the command's positional arguments (array in list context;
+  array reference in scalar context).
 
 Example:
 
@@ -282,18 +299,20 @@ Example:
       my ($self) = @_;
 
       my %args = $self->get_args(qw(message email));
-      
-      _send_message($arg{message}, $args{email});
 
-     ...
+      _send_message($args{message}, $args{email});
+    }
 
-Note that when calling `get_args` with a list of names the values for
-each named variable are assigned in the order they appear on the
-command line. In the example above `message` is assigned the first
-command argument, `email` is assigned the second argument. If you
-want just argument 1 and 3 for example you could do this:
+When you call `get_args` with a list of names, values are assigned in
+order: the first name gets the first argument, the second name gets the
+second argument, and so on. If you only want specific positions, you may
+use `undef` as a placeholder:
 
-    my %args = $self->get_args('message', undef , 'cc');
+    my %args = $self->get_args('message', undef, 'cc');  # args 1 and 3
+
+If there are fewer positional arguments than names, the remaining names
+are set to `undef`. Extra positional arguments (beyond the provided
+names) are ignored.
 
 ## init
 
@@ -376,12 +395,16 @@ context and a hash reference in scalar context._
 
 # CUSTOM ERROR HANDLER
 
-By default `CLI::Simple` will exit if `GetOptions` returns a false
-value indicating an error parsing your options. You can prevent that
-behavior in one of two ways.
+By default, `CLI::Simple` will exit if `GetOptions` returns a false
+value, indicating an error while parsing options. You can override this
+behavior in one of two ways:
 
-- Set $CLI::Simple:EXIT\_ON\_ERROR to a false value to continue processing.
-- Set an error handler in the constructor.
+- Set `$CLI::Simple::EXIT_ON_ERROR` to a false value.
+
+    This disables automatic exiting and lets your program decide what to do
+    after an option-parsing failure.
+
+- Provide an `error_handler` callback in the constructor.
 
         my $cli = CLI::Simple->new(
           commands        => \%commands,
@@ -390,14 +413,15 @@ behavior in one of two ways.
           option_specs    => \@option_specs,
           abbreviations   => $TRUE,
           error_handler   => sub {
-            print {*STDERR} shift;
-            return $FALSE;
+            my ($msg) = @_;
+            print {*STDERR} $msg;
+            return $TRUE;   # continue processing
           },
         );
 
-    The error handler is passed the error message output by
-    `GetOptions`. Return a true value to continue processing or a false
-    value to exit.
+    The error handler is called with the error message from `GetOptions`.
+    It must return a boolean: a true value allows processing to continue,
+    while a false value causes `CLI::Simple` to exit immediately.
 
 # SETTING DEFAULT VALUES FOR OPTIONS
 
@@ -533,7 +557,7 @@ Example:
       }
     )->run;
 
-- TIP: add other elements to the array for your command to process
+_TIP: add other elements to the array for your command to process._
 
 # FAQ
 
@@ -709,22 +733,24 @@ pass to the shell on exit.
 `CLI::Simple` uses conventional exit codes so that calling scripts
 can distinguish between normal completion and error conditions.
 
-- Successful completion of a command (`SUCCESS`).
-- 1
+- '0'
+
+    Successful completion of a command (`SUCCESS`).
+
+- '1'
 
     General usage error, such as `--help` display via `pod2usage`, or an
     invalid command line (`FAILURE`).
 
-- 2
+- '2'
 
     Option parsing failure, such as an unrecognized option or invalid
     argument (also reported as `FAILURE`).
 
 - Any other code
-- Any other code
 
     If a user-supplied command callback explicitly calls `exit()` or
-    returns a numeric value other than 0–2, that code is passed through
+    returns a numeric value other than 0 - 2, that code is passed through
     unchanged to the shell. This allows application-specific exit codes.
 
 # EXAMPLE
@@ -748,19 +774,3 @@ under the same terms as Perl itself.  See
 # AUTHOR
 
 Rob Lauer - <bigfoot@cpan.org>
-
-# POD ERRORS
-
-Hey! **The above document had some coding errors, which are explained below:**
-
-- Around line 1064:
-
-    '=item' outside of any '=over'
-
-- Around line 1066:
-
-    You forgot a '=back' before '=head1'
-
-- Around line 1281:
-
-    Non-ASCII character seen before =encoding in '0–2,'. Assuming UTF-8

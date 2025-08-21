@@ -141,8 +141,11 @@ subtest 'command abbreviations' => sub {
 
   eval {
     CLI::Simple->new(
-      commands     => { fuzzball => \&foo },
-      alias        => { options  => { biz => 'bar' } },
+      commands => {
+        fuzzball => \&foo,
+        buzzball => sub { return 0; },
+      },
+      alias        => { options => { biz => 'bar' } },
       option_specs => \@options
     )->run();
   };

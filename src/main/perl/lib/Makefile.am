@@ -17,7 +17,8 @@ UNIT_TESTS = \
     t/02-cli-simple-logging.t.in \
     t/03-cli-simple-types.t.in \
     t/04-cli-simple-help.t.in \
-    t/05-cli-simple-args.t.in
+    t/05-cli-simple-args.t.in \
+    t/06-cli-simple-default.t.in
 
 RUNIT_TESTS = $(UNIT_TESTS:.t.in=.t)
 
