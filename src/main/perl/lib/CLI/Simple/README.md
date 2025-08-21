@@ -35,6 +35,7 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
       default_options => { format => 'json' }, # set some defaults
       extra_options   => [ qw( content ) ], # non-option, setter/getter
       commands        => { execute => \&execute, list => \&list,  }
+      alias           => { options => {fmt => format}, commands => { ls => list } },
     )->run;
 
     1;
@@ -42,20 +43,20 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
 # DESCRIPTION
 
 Tired of writing the same 'ol boilerplate code for command line
-scripts? Want a standard, simple way to create a Perl script?
-`CLI::Simple` makes it easy to create scripts that take _options_,
-_commands_ and _arguments_.
+scripts? Want a standard, simple way to create a Perl script that
+takes options and commands?  `CLI::Simple` makes it easy to create
+scripts that take _options_, _commands_ and _arguments_.
 
 For common constant values (like `$TRUE`, `$DASH`, or `$SUCCESS`), see
 [CLI::Simple::Constants](https://metacpan.org/pod/CLI%3A%3ASimple%3A%3AConstants), which pairs naturally with this module.
 
 # VERSION
 
-This documentation refers to version 1.0.1.
+This documentation refers to version 1.0.2.
 
 ## Features
 
-- accept command line arguments ala [GetOptions::Long](https://metacpan.org/pod/GetOptions%3A%3ALong)
+- accept command line arguments ala [Getopt::Long](https://metacpan.org/pod/Getopt%3A%3ALong)
 - supports commands and command arguments
 - automatically add a logger
 - global or custom log levels per command
@@ -169,6 +170,12 @@ To use them in your script:
 
     use CLI::Simple::Constants qw(:all);
 
+# ADDITIONAL NOTES
+
+- All options are case insensitive
+- See [CLI::Simple::Utils](https://metacpan.org/pod/CLI%3A%3ASimple%3A%3AUtils) to learn about some additional
+utililities that are useful when writing scripts.
+
 # METHODS AND SUBROUTINES
 
 ## new
@@ -279,6 +286,14 @@ Example:
       _send_message($arg{message}, $args{email});
 
      ...
+
+Note that when calling `get_args` with a list of names the values for
+each named variable are assigned in the order they appear on the
+command line. In the example above `message` is assigned the first
+command argument, `email` is assigned the second argument. If you
+want just argument 1 and 3 for example you could do this:
+
+    my %args = $self->get_args('message', undef , 'cc');
 
 ## init
 
@@ -579,6 +594,146 @@ Example:
         This creates an executable called `foo-bar` that loads and invokes
         `Foo::Bar` as a modulino script.
 
+# ALIASING OPTIONS AND COMMANDS
+
+`CLI::Simple` lets you define short, human-friendly aliases for both
+option names and command names. Use the `alias` parameter to `new():`
+
+    my $app = CLI::Simple->new(
+      option_specs    => [ qw(config=s verbose!) ],
+      commands        => { list => \&list, execute => \&execute },
+      alias => {
+        options  => { cfg => 'config', v => 'verbose' },
+        commands => { ls  => 'list'   }
+      },
+    );
+
+## How option aliases work
+
+- Spec tail is copied automatically
+
+    You only name the canonical option in `option_specs`. For each alias,
+    `CLI::Simple` finds the canonical option's spec tail (for example
+    `=s`, `:i`, `!`, `+`) and appends it to the alias. In the example
+    above, `cfg` behaves as if you had written `cfg=s`, and `v` behaves
+    as if you had written `v!`.
+
+    _Note: If your option includes a one-letter short-cut and the alias
+    does not start with the same letter it will not be automatically
+    enabled as a short-cut._
+
+- Accessors are created for both names
+
+    Accessors are generated from all option names (canonical and aliases),
+    with '-' normalized to '\_'. In the example, both `get_config()` and
+    `get_cfg()` are available.
+
+- Values are mirrored after parsing
+
+    After option parsing and normalization, values are mirrored so either
+    name can be used consistently. If both the canonical name and its alias
+    are provided on the command line, the alias wins and becomes the final
+    value for both names.
+
+- No duplicate injection
+
+    If the alias already exists in `option_specs`, it will not be injected
+    again; value mirroring still occurs.
+
+- Errors are explicit
+
+    If an alias points at a canonical option that does not exist,
+    `CLI::Simple` croaks with a clear error.
+
+- Case sensitivity
+
+    `Getopt::Long` is used with `:config no_ignore_case`, so option names
+    (and therefore aliases) are case sensitive by default.
+
+## How command aliases work
+
+- Simple mapping
+
+    Provide `alias =` { commands => { alias => canonical } }> to map an alias
+    to an existing command. In the example, `ls` dispatches to the `list`
+    command.
+
+- Applied before abbreviations
+
+    Aliases are installed before command abbreviation resolution. If you
+    enable abbreviations, they apply to the full set of command names,
+    including any aliases.
+
+- Errors are explicit
+
+    If an alias points at a command that does not exist, `CLI::Simple` croaks
+    with a clear error.
+
+## Usage examples
+
+    # Using an option alias
+    script.pl --cfg app.json execute
+
+    # Using a command alias
+    script.pl ls
+
+After parsing, both `get_config()` and `get_cfg()` will return the
+same value. If the user passes both `--config` and `--cfg`, the value
+from `--cfg` (the alias) is used.
+
+## Recommendations
+
+- Keep the canonical spec single-named
+
+    Define a single canonical name in `option_specs` and add other spellings
+    via `alias`. Avoid multi-name specs like `config|cfg=s`; use `alias`
+    instead.
+
+- Document your precedence
+
+    If you prefer the alias name to win when both are supplied, enforce
+    that in your application or adjust the mirroring order. By default, the
+    canonical name wins.
+
+# ERRORS/EXIT CODES
+
+When you execute the `run()` method it passes control to the method
+that implements the command specified on the command line. Your method
+is expected to return 0 for success or an error code that you can the
+pass to the shell on exit.
+
+    exit CLI::Simple->new(commands => { foo => \&cmd_foo })->run();
+
+## Exit Codes
+
+`CLI::Simple` uses conventional exit codes so that calling scripts
+can distinguish between normal completion and error conditions.
+
+- Successful completion of a command (`SUCCESS`).
+- 1
+
+    General usage error, such as `--help` display via `pod2usage`, or an
+    invalid command line (`FAILURE`).
+
+- 2
+
+    Option parsing failure, such as an unrecognized option or invalid
+    argument (also reported as `FAILURE`).
+
+- Any other code
+- Any other code
+
+    If a user-supplied command callback explicitly calls `exit()` or
+    returns a numeric value other than 0–2, that code is passed through
+    unchanged to the shell. This allows application-specific exit codes.
+
+# EXAMPLE
+
+Run the shell script that comes with the distribution to output a
+working example.
+
+    cli-simple-example > example.pl
+
 # LICENSE AND COPYRIGHT
 
 This module is free software; you can redistribute it and/or modify it
@@ -598,10 +753,14 @@ Rob Lauer - <bigfoot@cpan.org>
 
 Hey! **The above document had some coding errors, which are explained below:**
 
-- Around line 956:
+- Around line 1064:
 
     '=item' outside of any '=over'
 
-- Around line 958:
+- Around line 1066:
 
     You forgot a '=back' before '=head1'
+
+- Around line 1281:
+
+    Non-ASCII character seen before =encoding in '0–2,'. Assuming UTF-8

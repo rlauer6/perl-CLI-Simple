@@ -3,11 +3,8 @@ package MyScript;
 use strict;
 use warnings;
 
-use lib 'src/main/perl/lib';
-
-use Data::Dumper;
-
 use CLI::Simple::Constants qw(:booleans);
+use Data::Dumper;
 
 use parent qw(CLI::Simple);
 
@@ -20,14 +17,17 @@ sub foo {
 ########################################################################
   my ($self) = @_;
 
-  my %args = $self->get_args(qw(arg1 arg2));
+  my @args = $self->get_args;
 
-  $self->get_logger->debug(
+  $self->get_logger->info(
     Dumper(
-      [ args      => \%args,
+      [ args      => \@args,
         log_level => $self->get_log_level,
         foo       => $self->get_foo,
-        bar       => $self->get_bar
+        bar       => $self->get_bar,
+        command   => $self->command,
+        biz       => $self->get_biz,
+        buz       => $self->get_buz,
       ]
     )
   );
@@ -42,12 +42,15 @@ sub bar {
 
   my %args = $self->get_args(qw(arg1 arg2));
 
-  $self->get_logger->debug(
+  $self->get_logger->info(
     Dumper(
       [ args      => \%args,
         log_level => $self->get_log_level,
         foo       => $self->get_foo,
-        bar       => $self->get_bar
+        bar       => $self->get_bar,
+        command   => $self->command,
+        biz       => $self->get_biz,
+        buz       => $self->get_buz,
       ]
     )
   );
@@ -58,11 +61,13 @@ sub bar {
 ########################################################################
 sub main {
 ########################################################################
-  return __PACKAGE__->new(
-    option_specs => [
+
+  my $app = __PACKAGE__->new(
+    extra_options => [qw( biz buz)],
+    option_specs  => [
       qw(
-        foo=s
-        bar
+        foo|f=s
+        bar|b
         help|h
       )
     ],
@@ -70,12 +75,16 @@ sub main {
       bar => \&bar,
       foo => \&foo,
     },
-  )->run;
+    alias => { commands => { fu => 'foo' }, options => { fu => 'foo' } },
+  );
+
+  $app->set_biz('biz');
+  $app->set_buz('buz');
+
+  return $app->run();
 }
 
 1;
-
-## no critic (RequirePodSections)
 
 __END__
 
@@ -83,29 +92,37 @@ __END__
 
 =head1 USAGE
 
-  myscript.pm [options] command args
+ example.pl [options] command args
+
+A minimal example of using CLI::Simple.
+
+=head2 Options
  
- Options           Description
- -------           -----------
  --help, -h        usage
  --log-level, -l   logging level (trace, ebug, info, warn, error), default: info
  --foo, -f         foo name
  --bar, -b         turn bar on/off (use --no-bar for off), default: on
+
+=head2 Commands
  
  Commands       Arguments
  --------       ---------
  help
  foo            arg1, arg2
  bar            arg1, arg2
+
+=head2 Recipes
+
+=over 4
+
+=item 1. Execute the foo command 
+
+ perl myscript.pm -l debug foo biz buz
  
- Recipes
- -------
- 1. Execute the foo command 
+=item 2. Execute the bar commaand
  
-    perl myscript.pm -l debug foo biz buz
- 
- 2. Execute the bar commaand
- 
-    perl myscript.pm bar
- 
+ perl myscript.pm bar
+
+=back
+
 =cut

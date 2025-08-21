@@ -1,3 +1,53 @@
+Thu Aug 21 12:45:30 2025  Rob Lauer  <rlauer6@comcast.net>
+
+	[1.0.2]:
+	* .gitignore: +cli-simple-example, create-modulino
+	* VERSION: bump
+	* test-requires: Test::Exit, Test::Output
+	* cpan/buildspec.yml
+	- + LICENSE, README, move examples to share/
+	* includes/bash-bin.inc: + cli-simple-example.sh.in
+	* src/examples/MyScript.pm
+	- more example usage
+	* src/main/perl/bin/Makefile.am
+	- add create_modulino, but make sure .pl does not get in distribution
+	* src/main/perl/bin/create-modulino.pl.in: /usr/bin/env perl
+	* src/main/perl/lib/CLI/Simple.pm.in
+	- $USE_LOGGER to avoid redefinition of _use_logger
+	- pod updates
+	(_use_logger): use above
+	(use_log4perl)
+	- allow log_level or level
+	- remove _use_logger creation
+	(new)
+	- + alias option
+	- don't require option_specs
+	- process option and command aliases
+	- use _leave, not exit
+	(_leave): new
+	(init_logger): get root logger
+	(get_args): allow skipping args
+	(usage)
+	- don't exit, use _leave()
+	- noperldoc
+	(example): new
+	(validate_command): refactored
+	* src/main/perl/lib/CLI/Simple/README.md: generated
+	* src/main/perl/lib/CLI/Simple/Utils.pm.in
+	(dmp): new
+	(args): new
+	* src/main/perl/lib/Makefile.am: add new tests
+	* src/main/perl/lib/t/01-cli-simple.t.in
+	- added more tests for alias
+	* src/main/perl/lib/t/04-cli-simple-help.t.in
+	* README: new
+	* src/main/bash/bin/cli-simple-example.sh.in: new
+	* src/main/perl/lib/t/01-cli-simple.t.in: new
+	* src/main/perl/lib/t/02-cli-simple-logging.t.in: new
+	* src/main/perl/lib/t/03-cli-simple-types.t.in: new
+	* src/main/perl/lib/t/04-cli-simple-help.t.in: new
+	* src/main/perl/lib/t/05-cli-simple-args.t.in: new
+
 Fri Aug  8 08:15:06 2025  Rob Lauer  <rlauer6@comcast.net>
 
 	[1.0.1]:

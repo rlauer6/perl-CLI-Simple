@@ -6,16 +6,15 @@ use strict;
 use warnings;
 
 use CLI::Simple::Constants qw(:booleans :chars :log-levels);
-use CLI::Simple::Utils qw(normalize_options);
+use CLI::Simple::Utils qw(normalize_options slurp dmp);
 use Carp;
-use Data::Dumper;
 use English qw(-no_match_vars);
 use FindBin qw($RealBin $RealScript);
 use Getopt::Long qw(:config no_ignore_case);
-use JSON qw(decode_json);
-use List::Util qw(zip none);
+use List::Util qw(zip none pairs any);
 use Scalar::Util qw(reftype);
-use Log::Log4perl;
+use Log::Log4perl qw(:easy);
+
 use Pod::Usage;
 
 our $VERSION              = '@PACKAGE_VERSION@';
@@ -23,7 +22,7 @@ our $GETOPT_EXIT_ON_ERROR = $TRUE;
 our $GETOPT_STATUS;
 our $GETOPT_ERROR_MESSAGE;
 
-use parent qw(Class::Accessor::Fast Exporter);
+use parent qw(Exporter Class::Accessor::Fast);
 
 __PACKAGE__->follow_best_practice;
 __PACKAGE__->mk_accessors(
@@ -36,10 +35,12 @@ __PACKAGE__->mk_accessors(
   )
 );
 
+our $USE_LOGGER = $FALSE;
+
 ########################################################################
 sub _use_logger {
 ########################################################################
-  return $FALSE;
+  return $USE_LOGGER;
 }
 
 ########################################################################
@@ -49,12 +50,14 @@ sub use_log4perl {
 
   my $class = ref $self || $self;
 
-  my ( $level, $log4perl_conf ) = @args{qw(level config)};
+  my ( $log_level, $level, $log4perl_conf ) = @args{qw(log_level level config)};
+  $level //= $log_level;
 
   {
     no strict 'refs';  ## no critic (ProhibitNoStrict)
 
-    *{"${class}::_use_logger"}        = sub { return $TRUE };
+    $USE_LOGGER = $TRUE;
+
     *{"${class}::get_log4perl_conf"}  = sub { return $log4perl_conf };
     *{"${class}::set_log4perl_conf"}  = sub { $log4perl_conf = $_[1] };
     *{"${class}::get_log4perl_level"} = sub { return $level };
@@ -78,8 +81,8 @@ sub new {
 
   my %args = ref $params[0] ? %{ $params[0] } : @params;
 
-  my ( $default_options, $option_specs, $commands, $extra_options, $abbreviations, $error_handler )
-    = @args{qw(default_options option_specs commands extra_options abbreviations error_handler)};
+  my ( $default_options, $option_specs, $commands, $extra_options, $abbreviations, $error_handler, $alias )
+    = @args{qw(default_options option_specs commands extra_options abbreviations error_handler alias)};
 
   no strict 'refs';  ## no critic
 
@@ -99,8 +102,9 @@ sub new {
   $option_specs    //= $OPTION_SPECS;
   $commands        //= $COMMANDS;
 
-  croak sprintf
-    "error: both 'option_specs' and 'command' are required\n:usage: %s->new( option_specs => specs, commands => commands);\n"
+  $option_specs //= [];
+
+  croak sprintf "ERROR: 'commands' is required\nusage: %s->new( option_specs => specs, commands => commands);\n", __PACKAGE__
     if !$option_specs || !$commands;
 
   $default_options //= {};
@@ -109,6 +113,30 @@ sub new {
 
   if ( $class->_use_logger && none { $_ eq 'log-level' } @{$option_specs} ) {
     push @{$option_specs}, 'log-level=s';
+  }
+
+  # if we have an option alias, make sure the option alias spec is set too
+  if ( $alias && ref $alias && $alias->{options} ) {
+    foreach my $p ( pairs %{ $alias->{options} } ) {
+      my ( $aka, $name ) = @{$p};
+
+      # Does an option named $aka already exist (with or without a spec)?
+      my $aka_exists = any {/^\Q$aka\E(?:[^\w-].*)?$/xsm} @{$option_specs};
+
+      if ( !$aka_exists ) {
+
+        # Find the canonical spec for $name
+        my ($spec) = grep {/^\Q$name\E(?:[^\w-].*)?$/xsm} @{$option_specs};
+        croak sprintf 'ERROR: no such option defined: %s', $name if !$spec;
+
+        # Pull just the specifier part (e.g., '=s', ':i', '!', '+', etc.)
+        my ($spec_part) = $spec =~ /^\Q$name\E(?:[|].)?([^\w-].*)?$/xsm;
+
+        $spec_part ||= q{};
+
+        push @{$option_specs}, $aka . $spec_part;
+      }
+    }
   }
 
   $GETOPT_STATUS = sub {
@@ -137,12 +165,40 @@ sub new {
 
   if ( !$error_handler && !$GETOPT_STATUS ) {
     print {*STDERR} $GETOPT_ERROR_MESSAGE;
-    exit $FAILURE
-      if $GETOPT_EXIT_ON_ERROR;
+    if ($GETOPT_EXIT_ON_ERROR) {
+      _leave($FAILURE);
+    }
   }
   elsif ( !$GETOPT_STATUS ) {
-    exit $FAILURE
-      if !$error_handler->($GETOPT_ERROR_MESSAGE);
+    if ( !$error_handler->($GETOPT_ERROR_MESSAGE) ) {
+      _leave($FAILURE);
+    }
+  }
+
+  croak "ERROR: alias must be a hash ref with keys 'options' or 'commands'\n"
+    if $alias && !ref $alias;
+
+  if ($alias) {
+    if ( $alias->{options} ) {
+      foreach my $p ( pairs %{ $alias->{options} } ) {
+        if ( defined $cli_options{ $p->[1] } ) {
+          $cli_options{ $p->[0] } = $cli_options{ $p->[1] };
+        }
+        elsif ( defined $cli_options{ $p->[0] } ) {
+          $cli_options{ $p->[1] } = $cli_options{ $p->[0] };
+        }
+      }
+    }
+
+    # command aliases are a convenience so someone doesn't have to add to $commands manually
+    if ( $alias->{commands} ) {
+      foreach my $p ( pairs %{ $alias->{commands} } ) {
+        croak sprintf "ERROR: no command: %s\n"
+          if !$commands->{ $p->[1] };
+
+        $commands->{ $p->[0] } = $commands->{ $p->[1] };
+      }
+    }
   }
 
   my $self = $class->SUPER::new( \%cli_options );
@@ -160,8 +216,9 @@ sub new {
 
     my $help = $commands->{help};
 
-    exit $self->usage
-      if !$help;
+    if ( !$help ) {
+      $self->usage;
+    }
 
     if ( reftype($help) eq 'ARRAY' ) {
       $help->[0]->($self);
@@ -185,6 +242,16 @@ sub new {
 }
 
 ########################################################################
+sub _leave {
+########################################################################
+  my (@args) = @_;
+
+  my ($exit_code) = ref $args[0] ? $args[1] : $args[0];
+
+  exit $exit_code;
+}
+
+########################################################################
 sub init_logger {
 ########################################################################
   my ($self) = @_;
@@ -198,14 +265,16 @@ sub init_logger {
       Log::Log4perl->easy_init( $LOG_LEVELS{error} );
     }
 
-    $self->set_logger( Log::Log4perl->get_logger );
+    my $logger = Log::Log4perl->get_logger(q{});
+
+    $self->set_logger($logger);
 
     my $level = $self->get_log_level // $self->get_log4perl_level;
 
     $self->set_log_level($level);
 
     if ($level) {
-      $self->get_logger->level( $LOG_LEVELS{$level} );
+      $logger->level( $LOG_LEVELS{$level} );
     }
   }
 
@@ -216,6 +285,9 @@ sub init_logger {
     if !$commands->{$command} || reftype( $commands->{$command} ) ne 'ARRAY';
 
   my ( $sub, $log_level ) = @{ $commands->{$command} };
+
+  return $self
+    if !$self->get_logger;
 
   $log_level = $self->get_log_level // $log_level;
 
@@ -253,7 +325,11 @@ sub get_args {
   return @{$command_args}
     if !@vars;
 
-  my %args = map { @{$_} } zip \@vars, $command_args;
+  @vars = map { $_ ? $_ : '<undef>' } @vars;
+
+  my %args = map { @{$_} } zip \@vars, [ @{$command_args}[ 0 .. $#vars ] ];
+
+  delete $args{'<undef>'};
 
   return wantarray ? %args : \%args;
 }
@@ -269,7 +345,23 @@ sub usage {
 ########################################################################
   my ($self) = @_;
 
-  return pod2usage( -exitval => 1, -input => $self->get__program );
+  return pod2usage(
+    -noperldoc => 1,
+    -exitval   => 'NOEXIT',
+    -input     => $self->get__program
+  );
+
+  return _leave($FAILURE);
+}
+
+########################################################################
+sub example {
+########################################################################
+  require File::ShareDir;
+
+  print {*STDOUT} slurp File::ShareDir::dist_file( 'CLI-Simple', 'MyScript.pm' );
+
+  return 0;
 }
 
 ########################################################################
@@ -302,32 +394,29 @@ sub validate_command {
   my ($self) = @_;
 
   my $commands = $self->commands;
-  my $command  = $self->command;
 
-  if ( !defined $commands->{$command} ) {
-    my $abbreviation = $command;
+  my $command = $self->command;
 
-    if ( $self->get__abbreviations ) {
+  return $command
+    if defined $commands->{$command};
 
-      my @matches = grep {/^$abbreviation/xsm} keys %{$commands};
+  croak sprintf "Unknown command: %s\n", $command
+    if !$self->get__abbreviations;
 
-      if ( @matches == 1 ) {
-        $command = $matches[0];  # Unique match — accept
-        $self->set__command($command);
-      }
-      elsif ( @matches > 1 ) {
-        croak "Ambiguous command '$abbreviation'; could match: @matches";
-      }
-      else {
-        croak "Unknown command: $abbreviation";
-      }
-    }
-    else {
-      croak "Unknown command: $command";
-    }
+  my $abbreviation = $command;
+
+  my @matches = grep {/^$abbreviation/xsm} keys %{$commands};
+
+  croak sprintf "Unknown command: %s\n", $command
+    if !@matches;
+
+  if ( @matches == 1 ) {
+    $command = $matches[0];  # Unique match — accept
+    $self->set__command($command);
+    return $command;
   }
 
-  return $command;
+  croak sprintf "Ambiguous command '$abbreviation'; could match: %s\n", join q{,}, @matches;
 }
 
 ########################################################################
@@ -396,6 +485,7 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
    default_options => { format => 'json' }, # set some defaults
    extra_options   => [ qw( content ) ], # non-option, setter/getter
    commands        => { execute => \&execute, list => \&list,  }
+   alias           => { options => {fmt => format}, commands => { ls => list } },
  )->run;
 
  1;
@@ -403,9 +493,9 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
 =head1 DESCRIPTION
 
 Tired of writing the same 'ol boilerplate code for command line
-scripts? Want a standard, simple way to create a Perl script?
-C<CLI::Simple> makes it easy to create scripts that take I<options>,
-I<commands> and I<arguments>.
+scripts? Want a standard, simple way to create a Perl script that
+takes options and commands?  C<CLI::Simple> makes it easy to create
+scripts that take I<options>, I<commands> and I<arguments>.
 
 For common constant values (like C<$TRUE>, C<$DASH>, or C<$SUCCESS>), see
 L<CLI::Simple::Constants>, which pairs naturally with this module.
@@ -418,7 +508,7 @@ This documentation refers to version @PACKAGE_VERSION@.
 
 =over 5
 
-=item * accept command line arguments ala L<GetOptions::Long>
+=item * accept command line arguments ala L<Getopt::Long>
 
 =item * supports commands and command arguments
 
@@ -590,6 +680,17 @@ To use them in your script:
 
   use CLI::Simple::Constants qw(:all);
 
+=head1 ADDITIONAL NOTES
+
+=over 4
+
+=item * All options are case insensitive
+
+=item * See L<CLI::Simple::Utils> to learn about some additional
+utililities that are useful when writing scripts.
+
+=back
+
 =head1 METHODS AND SUBROUTINES
 
 =head2 new
@@ -704,6 +805,14 @@ Example:
    _send_message($arg{message}, $args{email});
 
   ...
+
+Note that when calling C<get_args> with a list of names the values for
+each named variable are assigned in the order they appear on the
+command line. In the example above C<message> is assigned the first
+command argument, C<email> is assigned the second argument. If you
+want just argument 1 and 3 for example you could do this:
+
+ my %args = $self->get_args('message', undef , 'cc');
 
 =head2 init
 
@@ -1021,6 +1130,166 @@ C<Foo::Bar> as a modulino script.
 =back
 
 =back
+
+=head1 ALIASING OPTIONS AND COMMANDS
+
+C<CLI::Simple> lets you define short, human-friendly aliases for both
+option names and command names. Use the C<alias> parameter to C<new():>
+
+  my $app = CLI::Simple->new(
+    option_specs    => [ qw(config=s verbose!) ],
+    commands        => { list => \&list, execute => \&execute },
+    alias => {
+      options  => { cfg => 'config', v => 'verbose' },
+      commands => { ls  => 'list'   }
+    },
+  );
+
+=head2 How option aliases work
+
+=over 4
+
+=item * Spec tail is copied automatically
+
+You only name the canonical option in C<option_specs>. For each alias,
+C<CLI::Simple> finds the canonical option's spec tail (for example
+C<=s>, C<:i>, C<!>, C<+>) and appends it to the alias. In the example
+above, C<cfg> behaves as if you had written C<cfg=s>, and C<v> behaves
+as if you had written C<v!>.
+
+I<Note: If your option includes a one-letter short-cut and the alias
+does not start with the same letter it will not be automatically
+enabled as a short-cut.>
+
+=item * Accessors are created for both names
+
+Accessors are generated from all option names (canonical and aliases),
+with '-' normalized to '_'. In the example, both C<get_config()> and
+C<get_cfg()> are available.
+
+=item * Values are mirrored after parsing
+
+After option parsing and normalization, values are mirrored so either
+name can be used consistently. If both the canonical name and its alias
+are provided on the command line, the alias wins and becomes the final
+value for both names.
+
+=item * No duplicate injection
+
+If the alias already exists in C<option_specs>, it will not be injected
+again; value mirroring still occurs.
+
+=item * Errors are explicit
+
+If an alias points at a canonical option that does not exist,
+C<CLI::Simple> croaks with a clear error.
+
+=item * Case sensitivity
+
+C<Getopt::Long> is used with C<:config no_ignore_case>, so option names
+(and therefore aliases) are case sensitive by default.
+
+=back
+
+=head2 How command aliases work
+
+=over 4
+
+=item * Simple mapping
+
+Provide C<alias => { commands => { alias => canonical } }> to map an alias
+to an existing command. In the example, C<ls> dispatches to the C<list>
+command.
+
+=item * Applied before abbreviations
+
+Aliases are installed before command abbreviation resolution. If you
+enable abbreviations, they apply to the full set of command names,
+including any aliases.
+
+=item * Errors are explicit
+
+If an alias points at a command that does not exist, C<CLI::Simple> croaks
+with a clear error.
+
+=back
+
+=head2 Usage examples
+
+  # Using an option alias
+  script.pl --cfg app.json execute
+
+  # Using a command alias
+  script.pl ls
+
+After parsing, both C<get_config()> and C<get_cfg()> will return the
+same value. If the user passes both C<--config> and C<--cfg>, the value
+from C<--cfg> (the alias) is used.
+
+=head2 Recommendations
+
+=over 4
+
+=item * Keep the canonical spec single-named
+
+Define a single canonical name in C<option_specs> and add other spellings
+via C<alias>. Avoid multi-name specs like C<config|cfg=s>; use C<alias>
+instead.
+
+=item * Document your precedence
+
+If you prefer the alias name to win when both are supplied, enforce
+that in your application or adjust the mirroring order. By default, the
+canonical name wins.
+
+=back
+
+=head1 ERRORS/EXIT CODES
+
+When you execute the C<run()> method it passes control to the method
+that implements the command specified on the command line. Your method
+is expected to return 0 for success or an error code that you can the
+pass to the shell on exit.
+
+  exit CLI::Simple->new(commands => { foo => \&cmd_foo })->run();
+
+=head2 Exit Codes
+
+C<CLI::Simple> uses conventional exit codes so that calling scripts
+can distinguish between normal completion and error conditions.
+
+=over 4
+
+=item * 0
+
+Successful completion of a command (C<SUCCESS>).
+
+=item * 1
+
+General usage error, such as C<--help> display via C<pod2usage>, or an
+invalid command line (C<FAILURE>).
+
+=item * 2
+
+Option parsing failure, such as an unrecognized option or invalid
+argument (also reported as C<FAILURE>).
+
+=item * Any other code
+
+=item * Any other code
+
+If a user-supplied command callback explicitly calls C<exit()> or
+returns a numeric value other than 0–2, that code is passed through
+unchanged to the shell. This allows application-specific exit codes.
+
+=back
+
+=head1 EXAMPLE
+
+Run the shell script that comes with the distribution to output a
+working example.
+
+ cli-simple-example > example.pl
 
 =head1 LICENSE AND COPYRIGHT
 

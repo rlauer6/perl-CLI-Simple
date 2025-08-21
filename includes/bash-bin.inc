@@ -16,4 +16,5 @@
 # details.
 
 BASHSCRIPTS = \
-    modulino.sh.in
+    modulino.sh.in \
+    cli-simple-example.sh.in

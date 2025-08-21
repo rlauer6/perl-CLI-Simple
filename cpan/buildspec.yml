@@ -15,7 +15,10 @@ path:
   scripts: src/main/perl/bin
 extra-files:
   - ChangeLog
-  - src/examples
+  - LICENSE
+  - README
+  - share:
+      - src/examples
 provides:
   - CLI::Simple::Constants
   - CLI::Simple::Utils

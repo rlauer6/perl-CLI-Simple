@@ -12,7 +12,12 @@ include $(top_srcdir)/includes/perlcritic.inc
 UNIT_TESTS = \
     t/00-cli-simple.t.in \
     t/00-cli-simple-constants.t.in \
-    t/00-cli-simple-utils.t.in
+    t/00-cli-simple-utils.t.in \
+    t/01-cli-simple.t.in \
+    t/02-cli-simple-logging.t.in \
+    t/03-cli-simple-types.t.in \
+    t/04-cli-simple-help.t.in \
+    t/05-cli-simple-args.t.in
 
 RUNIT_TESTS = $(UNIT_TESTS:.t.in=.t)
 

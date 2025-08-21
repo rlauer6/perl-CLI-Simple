@@ -7,9 +7,6 @@ include $(top_srcdir)/includes/directories.inc
 include $(top_srcdir)/includes/perlcritic.inc
 include $(top_srcdir)/includes/perl-bin.inc
 
-
-#-*- mode: makefile-gmake; -*-
-
 TESTS = $(GUNIT_TESTS)
 
 # this was a tough one...VPATH builds are fun
@@ -29,13 +26,14 @@ UNIT_TESTS =
 UNIT_TESTS_LOGS=$(UNIT_TESTS:.t=.log)
 UNIT_TESTS_TRS=$(UNIT_TESTS:.t=.trs)
 
-
 all:
+	cp create-modulino.pl create-modulino
+	chmod +x create-modulino
+	chmod -x create-modulino.pl
 
 CLEANFILES = \
     $(GPERLSCRIPTS) \
     $(GPERLCRITIC_PL)
-
 
 man1_MANS = $(G1MANPAGES)
 
