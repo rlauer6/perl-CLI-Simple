@@ -181,11 +181,15 @@ sub new {
   if ($alias) {
     if ( $alias->{options} ) {
       foreach my $p ( pairs %{ $alias->{options} } ) {
-        if ( defined $cli_options{ $p->[1] } ) {
-          $cli_options{ $p->[0] } = $cli_options{ $p->[1] };
+        my ( $aka, $name ) = @{$p};
+        $aka  =~ s/[-]/_/gxsm;
+        $name =~ s/[-]/_/gxsm;
+
+        if ( defined $cli_options{$name} ) {
+          $cli_options{$aka} = $cli_options{$name};
         }
-        elsif ( defined $cli_options{ $p->[0] } ) {
-          $cli_options{ $p->[1] } = $cli_options{ $p->[0] };
+        elsif ( defined $cli_options{$aka} ) {
+          $cli_options{$name} = $cli_options{$aka};
         }
       }
     }
