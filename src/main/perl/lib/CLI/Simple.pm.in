@@ -387,7 +387,11 @@ sub example {
 ########################################################################
 sub command {
 ########################################################################
-  my ($self) = @_;
+  my ( $self, $command ) = @_;
+
+  if ($command) {
+    $self->set__command($command);
+  }
 
   return $self->get__command;
 }
@@ -395,9 +399,19 @@ sub command {
 ########################################################################
 sub commands {
 ########################################################################
-  my ($self) = @_;
+  my ( $self, $command, $handler ) = @_;
 
-  return $self->get__commands;
+  my $commands = $self->get__commands;
+
+  if ( $command && $handler ) {
+
+    croak "ERROR: usage: commands([command, subref])\n"
+      if reftype($handler) ne 'CODE';
+
+    $commands->{$command} = $handler;
+  }
+
+  return $commands;
 }
 
 ########################################################################
@@ -800,11 +814,24 @@ recognizes.
 
 =head2 command
 
-Returns the command presented on the command line.
+ command
+ command(command)
+
+Get or sets the command to execute. Usually this is the first argument
+on the command line after all options have been parsed. There are
+times when you might want to override the argument. You can pass a new
+command that will be executed when you call the C<run()> method.
 
 =head2 commands
 
-Returns the hash you passed in the constructor as C<commands>.
+ commands
+ commands(command, handler)
+
+Returns the hash you passed in the constructor as C<commands> or can
+be used to insert a new command into the C<commands> hash. C<handler>
+should be a code reference.
+
+ commands(foo => sub { return 'foo' });
 
 =head2 run
 

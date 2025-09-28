@@ -261,11 +261,24 @@ name and its arguments._
 
 ## command
 
-Returns the command presented on the command line.
+    command
+    command(command)
+
+Get or sets the command to execute. Usually this is the first argument
+on the command line after all options have been parsed. There are
+times when you might want to override the argument. You can pass a new
+command that will be executed when you call the `run()` method.
 
 ## commands
 
-Returns the hash you passed in the constructor as `commands`.
+    commands
+    commands(command, handler)
+
+Returns the hash you passed in the constructor as `commands` or can
+be used to insert a new command into the `commands` hash. `handler`
+should be a code reference.
+
+    commands(foo => sub { return 'foo' });
 
 ## run
 
