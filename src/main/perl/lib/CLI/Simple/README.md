@@ -52,7 +52,7 @@ For common constant values (like `$TRUE`, `$DASH`, or `$SUCCESS`), see
 
 # VERSION
 
-This documentation refers to version 1.0.4.
+This documentation refers to version 1.0.7.
 
 ## Features
 
