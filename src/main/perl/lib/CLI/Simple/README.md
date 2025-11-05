@@ -4,14 +4,17 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
 
 # SYNOPSIS
 
+    #!/usr/bin/env perl
+
     package MyScript;
 
     use strict;
     use warnings;
 
+    use CLI::Simple::Constants qw(:booleans :chars);
+    use CLI::Simple qw($AUTO_HELP $AUTO_DEFAULT);
+
     use parent qw(CLI::Simple);
-    
-    caller or __PACKAGE__->main();
     
     sub execute {
       my ($self) = @_;
@@ -30,13 +33,23 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
     }
 
     sub main {
-     CLI::Simple->new(
-      option_specs    => [ qw( help format=s ) ],
-      default_options => { format => 'json' }, # set some defaults
-      extra_options   => [ qw( content ) ], # non-option, setter/getter
-      commands        => { execute => \&execute, list => \&list,  }
-      alias           => { options => {fmt => format}, commands => { ls => list } },
-    )->run;
+
+      # Disable auto-default for single commands, enable auto-help
+      $AUTO_DEFAULT = 0;
+      $AUTO_HELP = 1;
+
+      my $cli = MyScript->new(
+       option_specs    => [ qw( help format=s file=s) ],
+       default_options => { format => 'json' }, # set some defaults
+       extra_options   => [ qw( content ) ], # non-option, setter/getter
+       commands        => { execute => \&execute, list => \&list,  }
+       alias           => { options => { fmt => format }, commands => { ls => list } },
+      );
+
+      return $cli->run();
+    }
+
+    exit main();
 
     1;
 
@@ -52,7 +65,24 @@ For common constant values (like `$TRUE`, `$DASH`, or `$SUCCESS`), see
 
 # VERSION
 
-This documentation refers to version 1.0.8.
+This documentation refers to version 1.0.9.
+
+## Changes from Version 1.0.8
+
+- New package variables $AUTO\_HELP and $AUTO\_DEFAULT
+
+    These new package variables allow finer grained control over default
+    behaviors when no command is provided on the command line. These
+    changes were made to allow for a more flexible lifecycle. See ["The
+    init-run Lifecycle"](#the-init-run-lifecycle).
+
+    - In previous versions, by default, `CLI::Simple` would print help
+    information if it was available and if there was no command provided
+    on the command line. That behavior is now controlled by $AUTO\_HELP.
+    - In previous versions, by default, `CLI::Simple` would run a
+    default command if only one command was defined and there was no
+    command on the command line. That behavior is now controlled by
+    $AUTO\_DEFAULT.
 
 ## Features
 
@@ -145,7 +175,7 @@ you want to add on top of it.
 
 ## When to Use
 
-CLI::Simple is ideal for:
+`CLI::Simple` is ideal for:
 
 - Internal tools and admin scripts
 - Bootstrapped CLIs where you don't want a framework
@@ -154,6 +184,85 @@ CLI::Simple is ideal for:
 For more advanced features - like command trees, plugin support, or interactive
 CLI handling - consider heavier modules like [App::Cmd](https://metacpan.org/pod/App%3A%3ACmd), [CLI::Framework](https://metacpan.org/pod/CLI%3A%3AFramework), or
 [MooX::Options](https://metacpan.org/pod/MooX%3A%3AOptions).
+
+## The init-run Lifecycle
+
+`CLI::Simple` is built on a flexible, two-phase lifecycle that 
+separates application setup from command execution.
+
+- **Phase 1: Initialization (`new` => `init`)**
+
+    When your script calls `CLI::Simple->`new()>, the constructor parses
+    all command-line arguments and then immediately calls your `init()` 
+    method.
+
+    Inside `init()`, your application has full access to the parsed options 
+    and arguments. This phase is the ideal hook for all final setup tasks, 
+    such as:
+
+    - Validating command-line arguments.
+    - Loading configuration files based on a `--config` option.
+    - Dynamically overriding the command (e..g, `$self->command('new_default')`).
+    - Performing any setup required **before** a command is run.
+
+    This `init()` phase **always runs** as part of object construction.
+
+- **Phase 2: Execution (`run`)**
+
+    After the `new()` method returns your object, your script then calls
+    the `run()` method. This method is responsible for dispatching to 
+    the **currently set** command.
+
+## "opt-in" Default Command
+
+By design, `CLI::Simple` **does not impose a default command**.
+This provides total flexibility for the application author:
+
+- **You Can Set a Default:** If your application needs a default
+command (e.g., to run `help` when no command is given), you can set
+`$AUTO_HELP`, explicitly set the `default` command in the `command`
+hash you pass to the constructor or uset `command()` to set one
+inside the `init()` method.
+- **You Can Have No Default:** If you do **not** set a default,
+`run()` will simply do nothing and return cleanly if no command
+is provided on the command line.
+
+This "no default by default" behavior is what enables a powerful 
+"setup-only" execution mode. A user can run your script _without_
+specifying a command. This will:
+
+- 1. Run the entire `new()` / `init()` phase, performing all setup.
+- 2. Call `run()`, which will find no command and exit cleanly.
+
+This provides an ideal hook for applications that need to perform
+"on-demand initialization" (e.g., seeding a database, authenticating)
+by checking for a specific flag inside `init()`, without also
+triggering an unwanted command.
+
+## `$AUTO_HELP` and `$AUTO_DEFAULT`
+
+Two package variables can be used to further control the lifecycle. By
+default, the framework provides no default command as explained in the
+sections above. Some scripters may want default behaviors that assume
+a command or provide usage if no command is provided.
+
+- `$AUTO_HELP`
+
+    Set the package variable `$AUTO_HELP` to a true value if you want
+    `CLI::Simple` to provide help when no command is provided.
+
+    default: false
+
+- `$AUTO_DEFAULT`
+
+    Set the package variable `$AUTO_DEFAULT` to a true value if you want
+    `CLI::Simple` to automatically select a command if you have only 1
+    command defined and no command is provided on the command line. When
+    true, it will prepend the single command name to the argument list,
+    allowing any subsequent arguments to be correctly parsed as args for
+    that command.
+
+    default: false
 
 # CONSTANTS
 
@@ -231,12 +340,14 @@ name and its arguments._
 
         { default => \&main }
 
-    If no default is provided, the default command becomes `usage()`.
+    If no default is provided, the behavior is controlled by the
+    `$AUTO_DEFAULT` and `$AUTO_HELP` package variables.
 
-    If your `commands` hash contains only a single command, that command
-    will be run automatically when no command name is given on the command
-    line. This allows you to treat the program like a single-command tool,
-    where arguments can be passed directly without explicitly naming the
+    Setting `$AUTO_DEFAULT` to true will when your `commands` hash
+    contains only a single command, will cause that command to be run
+    automatically when no command name is given on the command line. This
+    allows you to treat the program like a single-command tool, where
+    arguments can be passed directly without explicitly naming the
     command.
 
 - default\_options (optional)
