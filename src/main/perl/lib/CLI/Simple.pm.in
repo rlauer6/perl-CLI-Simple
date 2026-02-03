@@ -59,7 +59,7 @@ sub use_log4perl {
   $level //= $log_level;
 
   {
-    no strict 'refs';  ## no critic (ProhibitNoStrict)
+    no strict 'refs'; ## no critic (ProhibitNoStrict)
 
     $USE_LOGGER = $TRUE;
 
@@ -89,7 +89,7 @@ sub new {
   my ( $default_options, $option_specs, $commands, $extra_options, $abbreviations, $error_handler, $alias )
     = @args{qw(default_options option_specs commands extra_options abbreviations error_handler alias)};
 
-  no strict 'refs';  ## no critic
+  no strict 'refs'; ## no critic
 
   my $stash = \%{ $class . $DOUBLE_COLON };
 
@@ -290,7 +290,7 @@ sub init_logger {
   if ( $self->_use_logger ) {
 
     if ( my $config = $self->get_log4perl_conf ) {
-      Log::Log4perl->init( \$config );
+      Log::Log4perl->init( ref $config ? $config : \$config );
     }
     else {
       Log::Log4perl->import(':easy');
@@ -554,7 +554,7 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
     default_options => { format => 'json' }, # set some defaults
     extra_options   => [ qw( content ) ], # non-option, setter/getter
     commands        => { execute => \&execute, list => \&list,  }
-    alias           => { options => { fmt => format }, commands => { ls => list } },
+    alias           => { options => { fmt => 'format' }, commands => { ls => 'list' } },
    );
 
    return $cli->run();

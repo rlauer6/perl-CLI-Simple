@@ -1,3 +1,16 @@
+Tue Feb  3 16:20:20 2026  Rob Lauer  <rclauer@gmail.com>
+
+	[1.0.11]:
+	* VERSION: bump
+	* src/main/bash/bin/modulino.sh.in
+	- MODULINO_PATH, not $MODULION_PATH
+	* src/main/perl/lib/CLI/Simple.pm.in
+	- whitespace
+	- fixed pod alias example
+	(init_logger)
+	- allow ref or scalar for config
+	* src/main/perl/lib/CLI/Simple/README.md: generated
+
 Mon Dec 15 11:57:08 2025  Rob Lauer  <rclauer@gmail.com>
 
 	[1.0.10]:

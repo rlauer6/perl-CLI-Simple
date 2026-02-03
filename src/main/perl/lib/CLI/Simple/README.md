@@ -43,7 +43,7 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
        default_options => { format => 'json' }, # set some defaults
        extra_options   => [ qw( content ) ], # non-option, setter/getter
        commands        => { execute => \&execute, list => \&list,  }
-       alias           => { options => { fmt => format }, commands => { ls => list } },
+       alias           => { options => { fmt => 'format' }, commands => { ls => 'list' } },
       );
 
       return $cli->run();
@@ -65,7 +65,7 @@ For common constant values (like `$TRUE`, `$DASH`, or `$SUCCESS`), see
 
 # VERSION
 
-This documentation refers to version 1.0.9.
+This documentation refers to version 1.0.11.
 
 ## Changes from Version 1.0.8
 
