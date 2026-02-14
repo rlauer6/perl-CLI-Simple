@@ -9,7 +9,7 @@ package=@PACKAGE@
 cpan: buildspec.yml
 	cd $(top_srcdir); \
 	$(MAKE)
-
+	cp $(top_builddir)/README.md .
 	test -n "$$DEBUG" && set -x; \
 	test -n "$$DEBUG" && DEBUG="--debug"; \
 	test -e requires && REQUIRES="-r requires"; \

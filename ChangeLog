@@ -1,3 +1,14 @@
+Sat Feb 14 16:03:49 2026  Rob Lauer  <rclauer@gmail.com>
+
+	[1.0.12]:
+	* VERSION: bump
+	* LICENSE: align with code
+	* cpan/Makefile.am: add README.md
+	* cpan/buildspec.yml: likewise
+	* src/main/perl/lib/CLI/Simple/Utils.pm.in: align license
+	* src/main/perl/lib/CLI/Simple/README.md: generated
+	* src/main/perl/lib/CLI/Simple/Utils/README.md: likewise
+
 Tue Feb  3 16:20:20 2026  Rob Lauer  <rclauer@gmail.com>
 
 	[1.0.11]:

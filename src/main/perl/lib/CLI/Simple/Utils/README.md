@@ -47,6 +47,12 @@ Returns a Perl object from a presumably JSON encoded file.
 
 Return the entire contents of a file.
 
+# LICENSE AND COPYRIGHT
+
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.  See
+[https://dev.perl.org/licenses/](https://dev.perl.org/licenses/) for more information.
+
 # AUTHOR
 
 Rob Lauer - <bigfoot@cpan.org>

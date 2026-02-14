@@ -17,6 +17,7 @@ extra-files:
   - ChangeLog
   - LICENSE
   - README
+  - README.md
   - share:
       - src/examples
 provides:
