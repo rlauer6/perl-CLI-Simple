@@ -107,9 +107,9 @@ __END__
 
 =pod
 
-=head1 NAAME
+=head1 NAME
 
- CLI::Simple::Utils
+ CLI::Simple::Utils - Useful utility functions for CLI::Simple-based applications
 
 =head1 SYNOPSIS
 
@@ -166,5 +166,7 @@ L<https://dev.perl.org/licenses/> for more information.
 Rob Lauer - <bigfoot@cpan.org>
 
 =head1 SEE ALSO
- 
+
+L<CLI::Simple>
+
 =cut
