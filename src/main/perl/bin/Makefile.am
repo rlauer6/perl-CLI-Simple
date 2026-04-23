@@ -29,7 +29,7 @@ UNIT_TESTS_TRS=$(UNIT_TESTS:.t=.trs)
 all:
 	cp create-modulino.pl create-modulino
 	chmod +x create-modulino
-	chmod -x create-modulino.pl
+	chmod +x create-modulino.pl
 
 CLEANFILES = \
     $(GPERLSCRIPTS) \

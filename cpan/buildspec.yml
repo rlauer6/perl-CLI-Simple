@@ -23,6 +23,10 @@ extra-files:
 provides:
   - CLI::Simple::Constants
   - CLI::Simple::Utils
+  - CLI::Simple::Helpers
+  - CLI::Simple::DumpSpec
+  - CLI::Simple::Migrate
+  - CLI::Simple::Scaffold
 resources:
   homepage: http://github.com/rlauer6/perl-CLI-Simple
   bugtracker:
