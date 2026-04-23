@@ -1,3 +1,38 @@
+Thu Apr 23 13:25:42 2026  Rob Lauer  <rclauer@gmail.com>
+
+	[2.0.0]:
+	* VERSION: modified
+	* release-notes-2.0.0.md: new
+	* Makefile.am: + release-notes.mk
+	* includes/bash.inc: + cli-simple.sh.in, -modulino.sh.in, -cli-simple-example.sh.in
+	* cpan/buildspec.yml
+	- +CLI::Simple::Helper, CLI::Simple::DumpSpec, CLI::Simple::Migrate, CLI::Simple::Scaffold
+	* includes/perl-modules.inc: add above to build
+	* src/main/perl/bin/create-modulino.pl.in: refactored to use CLI::Simple
+	* cpan/requires
+	- +Role::Tiny, Role::Tiny::With, YAML:::XS
+	* src/main/perl/lib/CLI/Simple/Utils.pm.in: modified
+	* src/main/perl/lib/CLI/Simple/README.md: generated
+	* src/main/perl/lib/CLI/Simple.pm.in
+	- load manifest to specify commands and options
+	- pod updates
+	- caller or __PACKAGE__->main
+	(main): don't croak if no manifest
+	(%INTERNAL_COMMANDS): new
+	($MANIFEST): new
+	(import): new
+	(load_manifest): new
+	(new)
+	- dispatch to internal commands
+	(get_args): return ref or list
+	(set_args): new
+	(_cmd_generate_completion)
+	- generate a bash completion script based on options and commands
+	* src/main/perl/lib/CLI/Simple/DumpSpec.pm.in: new
+	* src/main/perl/lib/CLI/Simple/Helpers.pm.in: new
+	* src/main/perl/lib/CLI/Simple/Migrate.pm.in: new
+	* src/main/perl/lib/CLI/Simple/Scaffold.pm.in: new
+
 Sat Feb 14 16:03:49 2026  Rob Lauer  <rclauer@gmail.com>
 
 	[1.0.12]:

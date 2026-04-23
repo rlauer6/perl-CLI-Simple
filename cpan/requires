@@ -5,3 +5,6 @@ List::Util 1.56
 Log::Log4perl 1.57
 Log::Log4perl::Level 0
 Readonly 2.05
+Role::Tiny
+Role::Tiny::With
+YAML::XS

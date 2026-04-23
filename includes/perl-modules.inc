@@ -82,16 +82,26 @@ $(GCLIMODULES): % : %.in \
 perl5lib_clidir = $(perl5libdir)/CLI
 perl5lib_cli_DATA = $(GCLIMODULES)
 
-
 # +--------------------------------------------+
 # CLI/Simple
 # +--------------------------------------------+
 
 CLISIMPLEMODULES = \
     CLI/Simple/Constants.pm.in \
-    CLI/Simple/Utils.pm.in
+    CLI/Simple/Helpers.pm.in \
+    CLI/Simple/Utils.pm.in \
+    $(CLISIMPLE_INTERNAL)
+
+CLI/Simple/Migrate.pm: CLI/Simple/Scaffold.pm
+
+CLISIMPLE_INTERNAL = \
+    CLI/Simple/DumpSpec.pm.in \
+    CLI/Simple/Migrate.pm.in \
+    CLI/Simple/Scaffold.pm.in
 
 GCLISIMPLEMODULES = $(CLISIMPLEMODULES:.pm.in=.pm)
+
+$(CLISIMPLE_INTERNAL): CLI/Simple/Helpers.pm.in
 
 perl5lib_clisimpledir = $(perl5libdir)/CLI/Simple
 perl5lib_clisimple_DATA = $(GCLISIMPLEMODULES)

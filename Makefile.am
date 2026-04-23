@@ -54,3 +54,4 @@ EXTRA_DIST = \
 DISTCHECK_CONFIGURE_FLAGS = --with-perlcritic-severity=3 --with-perl5libdir='\$(prefix)/share/perl5'
 
 include version.mk
+include release-notes.mk
