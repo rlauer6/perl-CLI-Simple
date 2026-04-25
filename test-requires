@@ -1,3 +1,6 @@
 Test::More
 Test::Exit
 Test::Output
+CLI::Simple 2.0.0
+Role::Tiny 2.002004
+YAML::XS v0.904.0

@@ -59,7 +59,7 @@ define check_syntax_pm
 	  module=$$(echo $@ | perl -npe 's{^lib/}{}; s/\//::/g; s/\.pm$$//;'); \
 	  errfile=$$(mktemp) && trap 'rm -f $$errfile' EXIT; \
 	  perl -wc $(PERLINCLUDE) -M"$$module" -e 1 2>$$errfile \
-	    || { rm -f "$@"; cat $errfile; exit 1; }; \
+	    || { rm -f "$@"; cat $$errfile; exit 1; }; \
 	fi
 endef
 
