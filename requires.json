@@ -1,8 +1,0 @@
-{
-   "Log::Log4perl" : "",
-   "JSON::PP" : "",
-   "List::Util" : "1.56",
-   "Log::Log4perl::Level" : "",
-   "Readonly" : "",
-   "Class::Accessor::Fast" : ""
-}

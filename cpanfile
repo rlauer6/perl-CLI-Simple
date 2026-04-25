@@ -1,0 +1,15 @@
+requires "List::Util", "1.56";
+requires "Archive::Tar", "3.02_001";
+requires "Class::Accessor::Fast", "0.51";
+requires "File::ShareDir", "1.118";
+requires "File::Which", "1.23";
+requires "JSON", "4.07";
+requires "Log::Log4perl", "1.57";
+requires "Log::Log4perl::Level", "0";
+requires "Readonly", "2.05";
+requires "Role::Tiny", "0";
+requires "Role::Tiny", "2.002004";
+requires "Test::Exit", "0.11";
+requires "Test::Output", "1.036";
+requires "YAML::XS", "0";
+requires "YAML::XS", "v0.904.0";

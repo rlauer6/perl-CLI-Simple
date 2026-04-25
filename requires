@@ -1,10 +1,10 @@
++List::Util 1.56
 Archive::Tar 3.02_001
 Class::Accessor::Fast 0.51
 File::ShareDir 1.118
 File::Which 1.23
 JSON 4.07
 Log::Log4perl 1.57
-+List::Util 1.56
 Log::Log4perl::Level 0
 Readonly 2.05
 Role::Tiny 0

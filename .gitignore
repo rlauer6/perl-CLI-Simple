@@ -1,5 +1,5 @@
 **/*.sh
-module.pm.tmpl
+*.tmpl
 **/*.pl
 **/*.pm
 *.gz
@@ -12,6 +12,12 @@ module.pm.tmpl
 extra-files
 provides
 resources
-*-review-2*.pod
+*.tdy
+**/*.crit
+**/*.pod
 *-review-2*.code
+*-review-2*.pod
 *-review-2*.annotate
+bin/bootstrapper
+bin/cpan-maker-bootstrapper
+

@@ -14,6 +14,8 @@ MODULE_PATH = lib/$(shell echo $(MODULE_NAME) | perl -npe 's/::/\//g;').pm
 
 PROJECT_NAME ?= $(shell echo $(MODULE_NAME) | sed -e 's/::/-/g;')
 
+NO_ECHO ?= @
+
 UNIT_TEST_NAME = $(shell TEST_NAME=$(PROJECT_NAME) perl -e 'printf q{t/00-%s.t}, lc $$ENV{TEST_NAME}')
 
 MAKE_CPAN_DIST := $(shell command -v make-cpan-dist.pl)
@@ -33,11 +35,6 @@ CONFIG_READER = CPAN::Maker::Bootstrapper::ConfigReader
 BASEDIR  ?= $(shell perl -M$(CONFIG_READER) -e 'print $(CONFIG_READER)->new("$(CONFIG)")->cpan_maker_basedir;')
 
 MIN_PERL_VERSION ?= 5.010
-
-BUILDSPEC_TEMPLATE := $(shell perl -MFile::ShareDir=dist_file -e 'print dist_file(q{CPAN-Maker-Bootstrapper}, q{buildspec.yml.tmpl});' 2>/dev/null || echo buildspec.yml.tmpl )
-
-UNIT_TEST_TEMPLATE := $(shell perl -MFile::ShareDir=dist_file -e 'print dist_file(q{CPAN-Maker-Bootstrapper}, q{test.t.tmpl});' 2>/dev/null || echo test.t.tmpl )
-
 
 SCAN ?= ON
 
@@ -61,19 +58,28 @@ all: $(TARBALL) ## builds distribution tarball and dependencies
 include .includes/perl.mk
 
 bin/%.sh: bin/%.sh.in
-	@sed -e 's/[@]PACKAGE_VERSION[@]/$(VERSION)/' \
+	$(NO_ECHO)sed -e 's/[@]PACKAGE_VERSION[@]/$(VERSION)/' \
 	    -e 's/[@]MODULE_NAME[@]/$(MODULE_NAME)/' < $< > $@; \
 	chmod +x $@
 
 bin/%: bin/%.in
-	@sed -e 's/[@]PACKAGE_VERSION[@]/$(VERSION)/' \
+	$(NO_ECHO)sed -e 's/[@]PACKAGE_VERSION[@]/$(VERSION)/' \
 	    -e 's/[@]MODULE_NAME[@]/$(MODULE_NAME)/' < $< > $@; \
 	chmod +x $@
 
 .PHONY: quick
 quick: ## quick build, turns off scanning, perltidy, perlcritic
-	@$(MAKE) SCAN=off LINT=off
+	$(NO_ECHO)$(MAKE) SCAN=off LINT=off
 
+cpanfile: requires test-requires 
+	$(NO_ECHO)if [[ -e requires ]] && [[ -e test-requires ]]; then \
+	  all_requires=$$(mktemp); trap 'rm -f $$all_requires' EXIT; \
+	  cp requires $$all_requires; \
+	  cat test-requires >>$$all_requires; \
+	  sort -u $$all_requires | perl -ne 'chomp; s/^[+]//; ($$m,$$v)=split/\s+/,$$_,2; print qq{requires "$$m", "$$v";\n} if $$m;' >$@; \
+	else \
+	  echo >&2 "ERROR: make sure SCAN=on to produce requires, test-requires"; \
+	fi
 DEPS = \
     buildspec.yml \
     README.md \
@@ -81,6 +87,7 @@ DEPS = \
     $(PERL_MODULES) \
     $(BIN_FILES) \
     requires \
+    cpanfile \
     test-requires \
     $(UNIT_TEST_NAME) \
     ChangeLog
@@ -91,26 +98,31 @@ $(TARBALL): $(DEPS) \
 	$(MAKE_CPAN_DIST) -b $<
 
 module.pm.tmpl:
-	@if [[ -n "$(STUB)" ]]; then \
+	$(NO_ECHO)if [[ -n "$(STUB)" ]]; then \
 	  cp --preserve=all --update=none $(STUB) $@; \
 	  chmod +w $@; \
 	else \
 	  touch $@; \
 	fi; \
 
-$(MODULE_PATH).in: module.pm.tmpl
-	@mkdir -p $$(dirname $@); \
+$(MODULE_PATH).in: | module.pm.tmpl
+	$(NO_ECHO)mkdir -p $$(dirname $@); \
 	test -e $@ || sed -e 's/[@]MODULE_NAME[@]/$(MODULE_NAME)/' \
 	    -e 's/[@]GIT_NAME[@]/$(GIT_NAME)/' \
 	    -e 's/[@]GIT_EMAIL[@]/$(GIT_EMAIL)/' < $< > $@
 
-$(UNIT_TEST_NAME): $(UNIT_TEST_TEMPLATE)
-	@sed -e 's/[@]MODULE_NAME[@]/$(MODULE_NAME)/' < $< > $@
+test.t.tmpl:
+	$(NO_ECHO)template=$$(perl -MFile::ShareDir=dist_file -e 'print dist_file(q{CPAN-Maker-Bootstrapper}, q{$@});' 2>/dev/null); \
+	test -n "$$template" && cp $$template $@ || touch $@; \
+	chmod 0644 $$template
+
+$(UNIT_TEST_NAME): | test.t.tmpl
+	$(NO_ECHO)sed -e 's/[@]MODULE_NAME[@]/$(MODULE_NAME)/' < test.t.tmpl > $@
 
 ifeq ($(wildcard README.md.in),)
 # If README.md.in does NOT exist, use POD2MARKDOWN on the module
 README.md: $(MODULE_PATH)
-	@tmpfile=$$(mktemp); \
+	$(NO_ECHO)tmpfile=$$(mktemp); \
 	trap 'rm -f $$tmpfile' EXIT; \
 	echo "@TOC@" > $$tmpfile; \
 	$(POD2MARKDOWN) $< >> $$tmpfile; \
@@ -118,16 +130,16 @@ README.md: $(MODULE_PATH)
 else
 # If README.md.in DOES exist, use MD_UTILS on the template
 README.md: README.md.in
-	@$(MD_UTILS) $< > $@
+	$(NO_ECHO)$(MD_UTILS) $< > $@
 endif
 
 modulino.tmpl:
-	@modulino_path=$$(perl -MFile::ShareDir=dist_file -e 'print dist_file(q{CPAN-Maker-Bootstrapper}, q{modulino.tmpl});' 2>/dev/null); \
+	$(NO_ECHO)modulino_path=$$(perl -MFile::ShareDir=dist_file -e 'print dist_file(q{CPAN-Maker-Bootstrapper}, q{modulino.tmpl});' 2>/dev/null); \
 	cp $$modulino_path $@
 
 .PHONY: modulino
 modulino: modulino.tmpl ## creates a bash script that calls your modulino (MODULE_NAME=module ALIAS=name)
-	@trap 'rm -f modulino.tmpl' EXIT; \
+	$(NO_ECHO)trap 'rm -f modulino.tmpl' EXIT; \
 	MODULE_NAME="$(MODULE_NAME)"; \
 	ALIAS="$${ALIAS:-$$MODULE_NAME}"; \
 	binfile=$$(echo "$$ALIAS" | perl -npe 's/::/\-/g;'); \
@@ -211,7 +223,7 @@ endef
 export s_filter_requires = $(value filter_requires)
 
 requires: $(SOURCE_FILES) ## creates or updates the `requires` file used to populate PREQ_PM section of the Makefile.PL
-	@cleanfiles="$@.tmp $@.xxx"; \
+	$(NO_ECHO)cleanfiles="$@.tmp $@.xxx"; \
 	trap 'rm -f $$cleanfiles' EXIT; \
 	scan="$(SCAN)"; \
 	if [[ "$${scan^^}" = "ON" ]]; then \
@@ -226,7 +238,7 @@ requires: $(SOURCE_FILES) ## creates or updates the `requires` file used to popu
 	fi
 
 test-requires: $(TESTS) ## creates or update the `test-requires` file used to populate the TEST_REQUIRES section of the Makefile.PL
-	@cleanfiles="$@.tmp $@.xxx"; \
+	$(NO_ECHO)cleanfiles="$@.tmp $@.xxx"; \
 	trap 'rm -f $$cleanfiles' EXIT; \
 	scan="$(SCAN)"; \
 	if [[ "$${scan^^}" = "ON" ]]; then \
@@ -240,11 +252,18 @@ test-requires: $(TESTS) ## creates or update the `test-requires` file used to po
 	  fi; \
 	fi
 
-ChangeLog:
-	@test -e $@ || touch $@
 
-buildspec.yml: | $(BUILDSPEC_TEMPLATE)
-	@buildspec=$$(mktemp); \
+ChangeLog:
+	$(NO_ECHO)test -e $@ || touch $@
+
+buildspec.yml.tmpl:
+	$(NO_ECHO)template=$$(perl -MFile::ShareDir=dist_file -e 'print dist_file(q{CPAN-Maker-Bootstrapper}, q{$@});'); \
+	echo $$template; \
+	test -n "$$template" && cp $$template $@ || echo touch $@; \
+	chmod 0644 $$template
+
+buildspec.yml: | buildspec.yml.tmpl
+	$(NO_ECHO)buildspec=$$(mktemp); \
 	specfile="$(PROJECT_NAME)"; \
 	specfile="$${specfile,,}.yml"; \
 	if [[ -e "$$specfile" ]]; then \
@@ -258,7 +277,7 @@ buildspec.yml: | $(BUILDSPEC_TEMPLATE)
 	    -e 's/[@]PROJECT_NAME[@]/$(PROJECT_NAME)/g' \
 	    -e "s/[@]EXTRA_FILES[@]/$$extra_files/g" \
 	    -e "s/[@]SHARE_FILES[@]/$$share_files/g" \
-	    -e 's/[@]MIN_PERL_VERSION[@]/$(MIN_PERL_VERSION)/g' $(BUILDSPEC_TEMPLATE) > $$buildspec; \
+	    -e 's/[@]MIN_PERL_VERSION[@]/$(MIN_PERL_VERSION)/g' buildspec.yml.tmpl > $$buildspec; \
 	if test -e resources.yml; then \
 	  cat resources.yml >> $$buildspec; \
 	  rm resources.yml; \
@@ -285,8 +304,8 @@ CLEANFILES += \
     release-*.{lst,diffs}
 
 clean: ## removes temporary build artifacts
-	@rm -f $(CLEANFILES)
+	$(NO_ECHO)rm -f $(CLEANFILES)
 
 .PHONY: basedir
 basedir:
-	@echo $(BASEDIR)
+	$(NO_ECHO)echo $(BASEDIR)

@@ -1,0 +1,14 @@
+name: CLI-Simple
+on:
+  push:
+    branches: [ main ]
+jobs:
+  cli-simple-build:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: build
+        run: ./build-github https://github.com/rlauer6/CLI-Simple.git
