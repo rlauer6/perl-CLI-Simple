@@ -118,16 +118,16 @@ sub _resolve_spec {
     die "ERROR: spec file not found: $spec_file\n"
       if !-e $spec_file;
 
-    require YAML::XS;
-    return YAML::XS::LoadFile($spec_file);
+    require YAML::Tiny;
+    return YAML::Tiny::LoadFile($spec_file);
   }
 
   # 2. conventional spec file in cwd
   my $default_spec = _spec_filename($class);
 
   if ( -e $default_spec ) {
-    require YAML::XS;
-    return YAML::XS::LoadFile($default_spec);
+    require YAML::Tiny;
+    return YAML::Tiny::LoadFile($default_spec);
   }
 
   # 3. introspect from running module
@@ -142,7 +142,7 @@ sub _generate_spec_yaml {
 ########################################################################
   my ( $class, $commands, $option_specs, $use_roles ) = @_;
 
-  require YAML::XS;
+  require YAML::Tiny;
 
   my %spec_commands;
 
@@ -178,7 +178,7 @@ sub _generate_spec_yaml {
   my $stash         = \%{ $class . '::' };
   my @extra_options = $stash->{EXTRA_OPTIONS} ? @{ ${ $stash->{EXTRA_OPTIONS} } } : ();
 
-  return YAML::XS::Dump(
+  return YAML::Tiny::Dump(
     { options       => $option_specs,
       extra_options => \@extra_options,
       commands      => \%spec_commands,

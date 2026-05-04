@@ -91,9 +91,9 @@ sub _load_manifest {
 ########################################################################
   my ( $class, $target, $yaml_file ) = @_;
 
-  require YAML::XS;
+  require YAML::Tiny;
 
-  my $manifest = YAML::XS::LoadFile($yaml_file)
+  my $manifest = YAML::Tiny::LoadFile($yaml_file)
     or die "ERROR: could not load manifest: $yaml_file\n";
 
   if ( my $commands = $manifest->{commands} ) {
@@ -798,6 +798,12 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
   1;
 
 =head1 DESCRIPTION
+
+=begin markdown
+
+[![CLI-Simple](https://github.com/rlauer6/CLI-Simple/actions/workflows/build.yml/badge.svg)](https://github.com/rlauer6/CLI-Simple/actions/workflows/build.yml)
+
+=end markdown
 
 Tired of writing the same 'ol boilerplate code for command line
 scripts? Want a standard, simple way to create a Perl script that

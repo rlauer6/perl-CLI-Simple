@@ -164,6 +164,8 @@ CLI::Simple - a minimalist object oriented base class for CLI applications
 
 # DESCRIPTION
 
+[![CLI-Simple](https://github.com/rlauer6/CLI-Simple/actions/workflows/build.yml/badge.svg)](https://github.com/rlauer6/CLI-Simple/actions/workflows/build.yml)
+
 Tired of writing the same 'ol boilerplate code for command line
 scripts? Want a standard, simple way to create a Perl script that
 takes options and commands?  `CLI::Simple` makes it easy to create
@@ -196,7 +198,7 @@ distribution in one step.
 
 # VERSION
 
-This documentation refers to version 2.0.0.
+This documentation refers to version 2.0.1.
 
 # FEATURES
 

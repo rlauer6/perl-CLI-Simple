@@ -17,14 +17,14 @@ sub _cmd_scaffold {
   my ( $class, $commands, $option_specs ) = @_;
 
   require Archive::Tar;
-  require YAML::XS;
+  require YAML::Tiny;
 
   my $spec_file = $ARGV[1];
 
   my ( $spec, $effective_class );
 
   if ( $spec_file && -e $spec_file ) {
-    $spec = YAML::XS::LoadFile($spec_file);
+    $spec = YAML::Tiny::LoadFile($spec_file);
 
     # derive class from spec filename: cpan-maker-bootstrapper.yml -> Cpan::Maker::Bootstrapper
     ( my $stem = $spec_file ) =~ s/[.]ya?ml\z//xsm;
@@ -32,7 +32,7 @@ sub _cmd_scaffold {
   }
   else {
     my $yaml = _generate_spec_yaml( $class, $commands, $option_specs, $TRUE );
-    $spec            = YAML::XS::Load($yaml);
+    $spec            = YAML::Tiny::Load($yaml);
     $effective_class = $class;
   }
 
@@ -78,7 +78,7 @@ sub _cmd_scaffold {
   }
 
   # spec yaml into share/
-  $tar->add_data( "$dist.yml", YAML::XS::Dump($spec), );
+  $tar->add_data( "$dist.yml", YAML::Tiny::Dump($spec), );
 
   # help out the bootstrapper...
   my @role_paths = map { _pm_path($_); } keys %seen_roles;

@@ -1,5 +1,4 @@
 requires "List::Util", "1.56";
-requires "Archive::Tar", "3.02_001";
 requires "Class::Accessor::Fast", "0.51";
 requires "File::ShareDir", "1.118";
 requires "File::Which", "1.23";
@@ -11,5 +10,4 @@ requires "Role::Tiny", "0";
 requires "Role::Tiny", "2.002004";
 requires "Test::Exit", "0.11";
 requires "Test::Output", "1.036";
-requires "YAML::XS", "0";
-requires "YAML::XS", "v0.904.0";
+requires "YAML::Tiny", "1.76";

@@ -5,7 +5,7 @@ use warnings;
 
 use File::Temp qw(tempfile);
 use Test::More;
-use YAML::XS qw(DumpFile);
+use YAML::Tiny qw(DumpFile);
 
 use_ok('CLI::Simple');
 

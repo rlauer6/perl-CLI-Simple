@@ -3,15 +3,15 @@ project:
   author:
     name: Rob Lauer
     mailto: rclauer@gmail.com
-pm_module: CLI::Simple
+pm-module: CLI::Simple
 min-perl-version: 5.010
 dependencies:
-  test_requires: test-requires
+  test-requires: test-requires
   requires: requires
 path:
-  pm_module: lib
+  pm-module: lib
   tests: t
-  exe_files: bin
+  exe-files: bin
   scripts: bin
 extra-files:
   - ChangeLog
